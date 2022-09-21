@@ -1,0 +1,466 @@
+---
+title: "P. pyralis adult infection survival: testing statistical assumptions"
+author: "Moria Chambers + Sarah Lower"
+date: "`r Sys.Date()`"
+editor_options: 
+  chunk_output_type: console
+output: 
+  html_document: 
+    toc: yes
+    toc_depth: 4
+    toc_float: yes
+    theme: cerulean
+    code_folding: hide
+    keep_md: yes
+---
+
+# Goal: Test whether covariates fulfill assumption of CoxPH analysis (linear relationship with survival)
+
+*Study design:*
+
+![](./Experimental_design.png)
+  
+  + Covariates examined for basic biological trends (e.g. does condition decrease over season, are there differences in condition by location)
+    + Condition
+    + Season day
+    + Location
+  
+  + Covariates tested for linear relationship with survival:
+    + Condition
+    + Season day
+  
+---
+
+## Step 1: Ready the workspace
+```{r ready the workspace, message=FALSE}
+#clear all inputs
+rm(list = ls())
+
+#Check for necessary packages
+list.of.packages <- c("survival",
+                      "survminer",
+                      "ggplot2", 
+                      "tidyr",
+                      "dplyr",
+                      "Hmisc",
+                      "qqplotr",
+                      "ggthemes",
+                      "fabricatr",
+                      "gridExtra",
+                      "grid",
+                      "kableExtra",
+                      "sjPlot",
+                      "cowplot",
+                      "ggpubr",
+                      "patchwork",
+                      "magick", #so you can use the savekable function
+                      "webshot", #so you can use the savekable function
+                      "lme4",
+                      "RcppEigen")
+
+#should install packages that you don't have
+new.packages <- list.of.packages[!(list.of.packages %in% installed.packages()[,"Package"])]
+if(length(new.packages)) install.packages(new.packages)
+
+#Load the package that contains the Cox Propotional Hazard Function
+library(survival)
+library(ggplot2)
+library(tidyr)
+library(dplyr)
+library(Hmisc)
+library(qqplotr)
+library(ggthemes)
+library(fabricatr)
+library(survminer)
+library(gridExtra)
+library(grid)
+library(kableExtra)
+library(sjPlot)
+library(cowplot)
+library(ggpubr)
+library(patchwork)
+```
+
+---
+
+## Step 2: Import the data and create **Condition** variable
+```{r import the data, results = 'hide'}
+#This imports the data from a CSV file and creates the data frame PrTC
+Adult_Final<-read.table("2021_Adult_Firefly_Survival_binned3.csv", header=TRUE, sep=",", dec=".",na.strings=".") 
+
+#Code to explore linearity of survival data using binned covariates:
+#add Condition variable
+Adult_Final$Condition <- Adult_Final$Mass/Adult_Final$ElytralLength
+
+#Subset the data to only include uninfected controls
+Adult_Uninfected<-subset(Adult_Final, DoseBacteriaNumber=="0")
+#nrow(Adult_Uninfected)
+
+#This sets up the color palette using tableau20: https://jrnold.github.io/ggthemes/reference/tableau_color_pal.html
+site_colors <- c("USA: Montour Co, Bucknell Natural Area" = "#4E79A7", 
+                 "USA: Union Co, Bucknell Farm" = "#F28E2B", 
+                 "USA: Union Co, Bucknell Ropes Course" = "#E15759")
+```
+
+---
+
+## Step 3: Visualizing variation in **Condition** 
+
+### Q1. What does the condition distribution look like overall?
+
+ + **Raw data**
+```{r condition distribution, message = FALSE, fig.align="center", fig.width=7, fig.height=3}
+#generate distribution of raw data
+z <- ggplot(Adult_Final, aes(x=Condition)) +
+  geom_histogram() +
+  xlab("Condition (g/mm)") +
+  ylab("N fireflies") +
+  theme(plot.title = element_text(hjust = 0.5))
+z
+```
+
+### Q2. ...by location?
+ + Data summary:
+```{r condition by location table, message=FALSE}
+#generate tibble
+t<- Adult_Final %>% 
+  group_by(Location) %>% 
+  summarise(N=n(), mean_length=round(mean(Condition),6), SD = round(sd(Condition), 6))
+
+#generate nice looking table
+kbl(t, col.names = c("Location", "n", "Mean condition (g/mm)", "SD"), align = "lccc") %>%
+  kable_classic(full_width = F, html_font = "Cambria")
+```
+
+ + Raw data, three different ways:
+```{r condition by site figures, message=FALSE, fig.align="center"}
+#generate labels for sites that include sample size
+site_labels = c(paste("BNA", " (n = ", t$N[1], ")", sep=""), 
+                paste0("BUF", " (n = ", t$N[2], ")"), 
+                paste0("FDBCC",  " (n = ", t$N[3], ")"))
+
+#generate text placeholder
+a <- ggplot(Adult_Final, aes(x=Condition, fill=Location)) +
+  geom_histogram(alpha= 0.5, position="identity") +
+  scale_fill_manual(name = "Collection Location", labels = site_labels, values = site_colors)
+  
+legend.a <- cowplot::get_legend(a)
+
+#generate histogram
+b <- ggplot(Adult_Final, aes(x=Condition, fill=Location)) +
+  geom_histogram(alpha= 0.5, position="identity") +
+  xlab("Condition (g/mm)") +
+  ylab("N fireflies") +
+  theme(plot.title = element_text(hjust = 0.5), legend.position = "none") +
+  scale_fill_manual(name = "Location", labels = site_labels, values = site_colors)
+
+#generate violin plot
+c <- ggplot(Adult_Final, aes(x=Location, y=Condition, fill=Location)) +
+  geom_violin(alpha = 0.9) +
+  theme_classic() +
+  ylab("Condition (g/mm)") +
+  theme(plot.title = element_text(hjust = 0.5), legend.position = "none", axis.text.x=element_blank(), axis.title.x=element_blank()) +
+  geom_boxplot(width=0.2, alpha= 0.5, fill = "white") +
+  scale_fill_manual(values = site_colors)
+
+#generate boxplot
+d <- ggplot(Adult_Final, aes(x=Location, y=Condition, fill=Location)) +
+  geom_boxplot(alpha = 0.9) +
+  geom_jitter(size = 0.1)+
+  theme_classic() +
+  ylab("Condition (g/mm)") +
+  theme(plot.title = element_text(hjust = 0.5), legend.position = "none", axis.text.x=element_blank(), axis.title.x=element_blank()) +
+  scale_fill_manual(values = site_colors)
+
+grid.arrange(legend.a,b,c,d, nrow=2)
+```
+
+### Q3. ...by seasonday
+ + Data summary:
+```{r condition by seasonday summary table 2, message=FALSE}
+#generate tibble
+t <- Adult_Final %>%
+  group_by(Location, SeasonDay) %>%
+  summarise(N=n(), mean_length=round(mean(Condition),6), SD = round(sd(Condition),6)) %>%
+  arrange(SeasonDay)
+
+#make table nice in kable
+kbl(t, col.names = c("Location", "Season Day", "n", "Mean condition (g/mm)", "SD"), align = "lcccc") %>%
+  kable_classic(full_width = F, html_font = "Cambria")
+```
+
+ + Raw data, three different ways:
+```{r condition by seasonday plots, message=FALSE, fig.align="center"}
+#generate labels for seasondays that include sample size
+t$SeasonDayLabel = paste(t$SeasonDay, " (", t$N, ")", sep ="")
+  
+seasonday_label <- c(
+  '9' = t$SeasonDayLabel[1],
+  '13' = t$SeasonDayLabel[2],
+  '15' = t$SeasonDayLabel[3],
+  '17' = t$SeasonDayLabel[4],
+  '22' = t$SeasonDayLabel[5],
+  '23' = t$SeasonDayLabel[6],
+  '30' = t$SeasonDayLabel[7],
+  '31' = t$SeasonDayLabel[8],
+  '36' = t$SeasonDayLabel[9]
+  )
+
+#generate legend
+e <- ggplot(Adult_Final, aes(x=Condition, fill=Location)) +
+  geom_histogram() +
+  xlab("Condition (g/mm)") +
+  ylab("N fireflies") +
+  theme(plot.title = element_text(hjust = 0.5)) +
+  facet_wrap(~SeasonDay, labeller = as_labeller(seasonday_label)) +
+  scale_fill_manual(name = "Location", labels = c("BNA", "BUF", "FDBCC"), values = c("#4E79A7", "#F28E2B", "#E15759"))
+
+legend.e <- cowplot::get_legend(e)
+
+#generate histogram
+f <- ggplot(Adult_Final, aes(x=Condition, fill=Location)) +
+  geom_histogram() +
+  xlab("Condition (g/mm)") +
+  ylab("N fireflies") +
+  ggtitle("SeasonDay (n)") +
+  theme(plot.title = element_text(hjust = 0.5), legend.position = "none", axis.text.x = element_text(angle = 90)) +
+  facet_wrap(~SeasonDay, labeller = as_labeller(seasonday_label), ncol=5) +
+  scale_fill_manual(name = "Location", labels = c("BNA", "BUF", "FDBCC"), values = c("#4E79A7", "#F28E2B", "#E15759"))
+
+#generate violin plot by seasonday
+g <- ggplot(Adult_Final, aes(x=as.factor(SeasonDay), y=Condition, fill = Location)) +
+  geom_violin(alpha = 0.9) +
+  theme_classic() +
+  ylab("Condition (g/mm)") +
+  xlab("Season Day") +
+  theme(plot.title = element_text(hjust = 0.5), axis.text.x = element_text(angle = 90), legend.position = "none") +
+  geom_boxplot(width=0.2, fill = "white") +
+  scale_fill_manual(name = "Location", labels = c("BNA", "BUF", "FDBCC"), values = c("#4E79A7", "#F28E2B", "#E15759"))
+
+#generate violin plot by site
+h <- ggplot(Adult_Final, aes(x=as.factor(SeasonDay), y=Condition, fill = Location)) +
+  geom_violin(alpha = 0.9) +
+  theme_classic() +
+  ylab("Condition (g/mm)") +
+  xlab("Season Day") +
+  theme(plot.title = element_text(hjust = 0.5), legend.position = "none", axis.text.x = element_text(angle = 90)) +
+  facet_wrap(~Location, labeller = labeller(Location = 
+    c("USA: Montour Co, Bucknell Natural Area" = "BNA",
+      "USA: Union Co, Bucknell Farm" = "BUF",
+      "USA: Union Co, Bucknell Ropes Course" = "FDBCC"))) +
+  geom_boxplot(width=0.2, fill = "white") +
+  scale_fill_manual(values = c("#4E79A7", "#F28E2B", "#E15759"))
+
+lay1 <- rbind(c(2,2,2,1))
+lay2 <- rbind(c(1,1,2,2,2))
+
+g1 <- arrangeGrob(legend.e, f, layout_matrix = lay1)
+g2 <- arrangeGrob(g,h, layout_matrix = lay2)
+ 
+grid.arrange(g1, g2, nrow=2)                  
+```
+
+### Q4. Are the distributions within each Location * SeasonDay normal?
+Testing the *raw data:*
+
+  + **Q-Q plot** for the raw data (left) and **Shapiro test** (bottom right)
+  
+```{r condition qq plots, fig.align="left"}
+#qq plots to assess normality
+q <- ggplot(Adult_Final, aes(sample=Condition, color=Location)) +
+  stat_qq_band(bandType = "pointwise", fill = "#8DA0CB", alpha = 0.4) + 
+  stat_qq_line(color = "#8DA0CB") +
+  stat_qq_point() +
+  ggtitle("Season Day") +
+  facet_wrap(~SeasonDay) +
+  scale_color_manual(name = "Location", labels = c("BNA", "BUF", "FDBCC"), values = c("#4E79A7", "#F28E2B", "#E15759")) +
+  theme(legend.position = "none")
+
+#statistically test
+shapiro.table <- NULL
+for (day in levels(factor(Adult_Final$SeasonDay))){
+  #subset table
+  table.sub <- Adult_Final[Adult_Final$SeasonDay == day,]
+  test.result <- (shapiro.test(table.sub$Condition))
+  info <- data.frame(SeasonDay = day, W = round(test.result[1]$statistic, 2), p = round(test.result[2]$p.value, 2))
+  shapiro.table <- rbind(shapiro.table, info)
+}
+
+#create kable filename
+kable_filename = paste("Condition_shapiro", ".png", sep="")
+
+#generate nice table with kable
+kbl(shapiro.table, row.names = FALSE, col.names = c("Season Day", "W", "P"), align = "ccc")  %>%
+  kable_classic(full_width = F, html_font = "Cambria") %>% 
+  save_kable(file = kable_filename, bs_theme = "cerulean", zoom = 7) 
+
+#make big plot with table
+#read in kable table as image
+r <- ggdraw() +
+  draw_image(kable_filename)
+
+#stack the legend on top of the table
+g3 <- arrangeGrob(legend.e, r, nrow =2)
+
+#make the column width layout
+shapiro_layout <- rbind(c(1,1,1,2))
+
+#plot the graph next to the legend and table
+grid.arrange(q, g3, nrow = 1,  layout_matrix = shapiro_layout)
+```
+
+**Conclusions:**
+
+  + *p* < 0.05 for conditions distributions from:
+    + Day 15
+    + Day 17
+    + Day 23
+    + Day 31
+
+*4/9 collection days are not normally distributed, but all of these days have sample size greater than 30, meaning parametric stats should be fine. Proceed with using un-transformed condition in downstream analysis.*
+
+### Q6. Do seasonday and location predict condition?
+
+ + Summary of effects:
+```{r condition model test, fig.align='center'}
+Condition<-lm(Condition~SeasonDay*Location, data=Adult_Final)
+summary(Condition)
+```
+
+ + ANOVA(model) results:
+```{r condition anova}
+kbl(anova(Condition), digits = 3)  %>%
+  kable_classic(full_width = F, html_font = "Cambria")
+```
+
+ + For **Condition**, only **SeasonDay** is significant (p = 0.01).
+
+### Conclusions
+
+  + **Season Day** matters (p = 0.004) - there is a decrease in condition over the season.
+  + **Location** doesn't really matter (caveats: sampling efforts at sites were not equal and non-randomly distributed across the season) 
+  + Test un-transformed condition in downstream linearity assessment analysis
+
+ + Plots:
+    + Blue: BNA
+    + Red: BUF
+    + Gold: FDBCC
+
+### Plot
+```{r condition plot for season day, fig.align="center", fig.width=5, fig.height=3, message = FALSE}
+#plot with all locations over the season
+p_condition_by_season_day <- ggplot(Adult_Final, aes(x=as.numeric(SeasonDay), y=Condition)) +
+  geom_point(size = 1, alpha = 0.7) +
+  theme_classic() +
+  ylab("Condition (g/mm)") +
+  xlab("Season Day") +
+  theme(plot.title = element_text(hjust = 0.5), axis.text.x = element_text(angle = 90), legend.position = "none") +
+  geom_smooth(method = "lm", se=FALSE, color = "gray23") +
+  stat_regline_equation(label.x = c(25), label.y = 0.0063, aes(label = ..eq.label..)) +
+  stat_regline_equation(label.x = c(25), label.y = 0.0059, aes(label = ..rr.label..))
+
+p_condition_by_season_day
+```
+
+---
+
+## Step 4: Exploring linearity for survival analysis
+
+Using the subset of the data of only UNINFECTED fireflies (either uninjected or injected with sterile PBS solution), we are exploring whether we need to transform any of our explanatory variables, or convert them to a different variable type (ordered factor vs categorical vs quantitative). 
+
+There are `r nrow(Adult_Uninfected)` fireflies in the UNINFECTED dataset.
+
+Procedure: Assign individual fireflies to bins based on the explanatory variable using the whole dataset, not just uninfected fireflies. Want bins to be equidistant across the range of values of the explanatory variable. When run the model on just the uninfected subset, if the beta values are linear, then the explanatory variable can be considered quantitative in survival analysis.
+
+### **Condition**
+#### Q. Can **Condition** be quantitative or do we need to stratify the analysis?
+
+  + Summary:
+    + **Condition** binned into **8 increments**
+    + Seems good sample size for number of individuals in each bin, though the top and bottom bins are poorly supported (few fireflies)
+    + CONCLUSION: **Condition** has a generally linear relationship, use as-is
+    
+  + Analysis:
+    + Checking bins for sample size
+```{r Determine whether condition can be quantitative - bins}
+#for Condition
+Adult_Final$ConditionBins <- as.numeric(cut(Adult_Final$Condition, 8))
+Adult_Final$ConditionBinsF<-as.factor(Adult_Final$ConditionBins)
+
+#Subset the data to only include uninfected controls
+Adult_Uninfected<-subset(Adult_Final, DoseBacteriaNumber=="0")
+
+t <- t(table(Adult_Uninfected$ConditionBins))
+row.names(t) <- "n"
+
+kbl(t) %>%
+  kable_classic(full_width = F, html_font = "Cambria", position = "center") %>%
+  add_header_above(c(" ", "Bins"= 8))
+```
+
+   + Checking coefficients for linearity:
+```{r Determine whether condition can be quantitative - coef, fig.align='center', fig.width=3, fig.height=3}
+modelCond<-coxph(Surv(Days_post_infection,Status)~ConditionBinsF,data=Adult_Uninfected)
+summary(modelCond)
+
+df <- tibble(Bin = names(modelCond$coefficients), Coef = (modelCond$coefficients))
+          
+ggplot(df,aes(x=Bin, y=Coef)) +
+  geom_point() +
+  theme_classic() +
+  theme(axis.text.x = element_text(angle = 90, vjust = 0.5, hjust=1))
+```
+
+---
+
+### **SeasonDay**
+#### Q. Can **SeasonDay** be considered linear?
+ 
+ +Summary:
+   + **Season Day** binned into **5 increments**
+   + The fourth bin poorly supported (low sample size)
+   + The intervals between bins are pretty good (0.1,0.4,0.45,0.5)
+   + CONCLUSION: Generally looks linear! Use as is.
+  
+ + Analysis
+     + Checking bins for sample size
+```{r seasonday quantitative bins}
+#Season Day with 5 increments, fourth bin poorly supported, intervals between bins (0.1,0.4,0.45,0.5) - doesn't look great. Do we need to take other variables into account first? Then would it act linearly?
+
+#set up bins for SeasonDay
+Adult_Final$SeasonDayBins <- as.numeric(cut(Adult_Final$SeasonDay, 5))
+#table(Adult_Final$SeasonDayBins) #how many in each category
+Adult_Final$SeasonDayBinsF<-as.factor(Adult_Final$SeasonDayBins)
+
+#Subset the data to only include uninfected controls
+Adult_Uninfected<-subset(Adult_Final, DoseBacteriaNumber=="0")
+#nrow(Adult_Uninfected)
+
+t <- t(table(Adult_Uninfected$SeasonDayBinsF))
+row.names(t) <- "n"
+
+kbl(t) %>%
+  kable_classic(full_width = F, html_font = "Cambria", position = "center") %>%
+  add_header_above(c(" ", "Bins"= 5))
+```
+
+   + Checking coefficients for linearity:
+
+```{r Determine whether Seasonday can be quantitative - coef, fig.align='center', fig.width=3, fig.height=3}
+modelSD<-coxph(Surv(Days_post_infection,Status)~SeasonDayBinsF,data=Adult_Uninfected)
+summary(modelSD)
+
+df <- tibble(Bin = names(modelSD$coefficients), Coef = (modelSD$coefficients))
+          
+ggplot(df,aes(x=Bin, y=Coef)) +
+  geom_point() +
+  theme_classic() +
+  theme(axis.text.x = element_text(angle = 90, vjust = 0.5, hjust=1))
+```
+
+---
+
+## Step 4: Session Info
+```{r session info}
+sessionInfo()
+```
