@@ -2,7 +2,7 @@
 #'title: "foo"
 #'author: "Sarah Lower"
 #'date: "2022-09-21"
-#'output: html_document
+#'output: github_document
 #'---
 
 #+ r setup, include=FALSE
