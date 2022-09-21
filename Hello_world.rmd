@@ -5,6 +5,7 @@ date: "2022-09-21"
 output: 
   html_document: 
     keep_md: yes
+    code_folding: hide
 ---
 
 Hello world!
