@@ -1,6 +1,5 @@
 name: "P. pyralis adult survival infection data analysis"
-output_dir: "docs"
-exclude: ["S1.EL_Mass_relationships_6_14_22.Rmd", "*S2.Exploring_linearity_condition_5_13_22.Rmd"]
+output_dir: "."
 navbar:
   title: "P. pyralis adult survival infection data analysis"
   left:

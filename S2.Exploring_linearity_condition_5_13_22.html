@@ -1,0 +1,1563 @@
+<!DOCTYPE html>
+
+<html>
+
+<head>
+
+<meta charset="utf-8" />
+<meta name="generator" content="pandoc" />
+<meta http-equiv="X-UA-Compatible" content="IE=EDGE" />
+
+
+<meta name="author" content="Moria Chambers + Sarah Lower" />
+
+<meta name="date" content="2022-09-22" />
+
+<title>P. pyralis adult infection survival: testing statistical assumptions</title>
+
+<script src="site_libs/header-attrs-2.16/header-attrs.js"></script>
+<script src="site_libs/jquery-3.6.0/jquery-3.6.0.min.js"></script>
+<meta name="viewport" content="width=device-width, initial-scale=1" />
+<link href="site_libs/bootstrap-3.3.5/css/cerulean.min.css" rel="stylesheet" />
+<script src="site_libs/bootstrap-3.3.5/js/bootstrap.min.js"></script>
+<script src="site_libs/bootstrap-3.3.5/shim/html5shiv.min.js"></script>
+<script src="site_libs/bootstrap-3.3.5/shim/respond.min.js"></script>
+<style>h1 {font-size: 34px;}
+       h1.title {font-size: 38px;}
+       h2 {font-size: 30px;}
+       h3 {font-size: 24px;}
+       h4 {font-size: 18px;}
+       h5 {font-size: 16px;}
+       h6 {font-size: 12px;}
+       code {color: inherit; background-color: rgba(0, 0, 0, 0.04);}
+       pre:not([class]) { background-color: white }</style>
+<script src="site_libs/jqueryui-1.11.4/jquery-ui.min.js"></script>
+<link href="site_libs/tocify-1.9.1/jquery.tocify.css" rel="stylesheet" />
+<script src="site_libs/tocify-1.9.1/jquery.tocify.js"></script>
+<script src="site_libs/navigation-1.1/tabsets.js"></script>
+<script src="site_libs/navigation-1.1/codefolding.js"></script>
+<link href="site_libs/highlightjs-9.12.0/default.css" rel="stylesheet" />
+<script src="site_libs/highlightjs-9.12.0/highlight.js"></script>
+<script src="site_libs/kePrint-0.0.1/kePrint.js"></script>
+<link href="site_libs/lightable-0.0.1/lightable.css" rel="stylesheet" />
+
+<style type="text/css">
+  code{white-space: pre-wrap;}
+  span.smallcaps{font-variant: small-caps;}
+  span.underline{text-decoration: underline;}
+  div.column{display: inline-block; vertical-align: top; width: 50%;}
+  div.hanging-indent{margin-left: 1.5em; text-indent: -1.5em;}
+  ul.task-list{list-style: none;}
+    </style>
+
+<style type="text/css">code{white-space: pre;}</style>
+<script type="text/javascript">
+if (window.hljs) {
+  hljs.configure({languages: []});
+  hljs.initHighlightingOnLoad();
+  if (document.readyState && document.readyState === "complete") {
+    window.setTimeout(function() { hljs.initHighlighting(); }, 0);
+  }
+}
+</script>
+
+
+
+
+
+
+
+
+
+<style type = "text/css">
+.main-container {
+  max-width: 940px;
+  margin-left: auto;
+  margin-right: auto;
+}
+img {
+  max-width:100%;
+}
+.tabbed-pane {
+  padding-top: 12px;
+}
+.html-widget {
+  margin-bottom: 20px;
+}
+button.code-folding-btn:focus {
+  outline: none;
+}
+summary {
+  display: list-item;
+}
+details > summary > p:only-child {
+  display: inline;
+}
+pre code {
+  padding: 0;
+}
+</style>
+
+
+<style type="text/css">
+.dropdown-submenu {
+  position: relative;
+}
+.dropdown-submenu>.dropdown-menu {
+  top: 0;
+  left: 100%;
+  margin-top: -6px;
+  margin-left: -1px;
+  border-radius: 0 6px 6px 6px;
+}
+.dropdown-submenu:hover>.dropdown-menu {
+  display: block;
+}
+.dropdown-submenu>a:after {
+  display: block;
+  content: " ";
+  float: right;
+  width: 0;
+  height: 0;
+  border-color: transparent;
+  border-style: solid;
+  border-width: 5px 0 5px 5px;
+  border-left-color: #cccccc;
+  margin-top: 5px;
+  margin-right: -10px;
+}
+.dropdown-submenu:hover>a:after {
+  border-left-color: #adb5bd;
+}
+.dropdown-submenu.pull-left {
+  float: none;
+}
+.dropdown-submenu.pull-left>.dropdown-menu {
+  left: -100%;
+  margin-left: 10px;
+  border-radius: 6px 0 6px 6px;
+}
+</style>
+
+<script type="text/javascript">
+// manage active state of menu based on current page
+$(document).ready(function () {
+  // active menu anchor
+  href = window.location.pathname
+  href = href.substr(href.lastIndexOf('/') + 1)
+  if (href === "")
+    href = "index.html";
+  var menuAnchor = $('a[href="' + href + '"]');
+
+  // mark the anchor link active (and if it's in a dropdown, also mark that active)
+  var dropdown = menuAnchor.closest('li.dropdown');
+  if (window.bootstrap) { // Bootstrap 4+
+    menuAnchor.addClass('active');
+    dropdown.find('> .dropdown-toggle').addClass('active');
+  } else { // Bootstrap 3
+    menuAnchor.parent().addClass('active');
+    dropdown.addClass('active');
+  }
+
+  // Navbar adjustments
+  var navHeight = $(".navbar").first().height() + 15;
+  var style = document.createElement('style');
+  var pt = "padding-top: " + navHeight + "px; ";
+  var mt = "margin-top: -" + navHeight + "px; ";
+  var css = "";
+  // offset scroll position for anchor links (for fixed navbar)
+  for (var i = 1; i <= 6; i++) {
+    css += ".section h" + i + "{ " + pt + mt + "}\n";
+  }
+  style.innerHTML = "body {" + pt + "padding-bottom: 40px; }\n" + css;
+  document.head.appendChild(style);
+});
+</script>
+
+<!-- tabsets -->
+
+<style type="text/css">
+.tabset-dropdown > .nav-tabs {
+  display: inline-table;
+  max-height: 500px;
+  min-height: 44px;
+  overflow-y: auto;
+  border: 1px solid #ddd;
+  border-radius: 4px;
+}
+
+.tabset-dropdown > .nav-tabs > li.active:before {
+  content: "";
+  font-family: 'Glyphicons Halflings';
+  display: inline-block;
+  padding: 10px;
+  border-right: 1px solid #ddd;
+}
+
+.tabset-dropdown > .nav-tabs.nav-tabs-open > li.active:before {
+  content: "&#xe258;";
+  border: none;
+}
+
+.tabset-dropdown > .nav-tabs.nav-tabs-open:before {
+  content: "";
+  font-family: 'Glyphicons Halflings';
+  display: inline-block;
+  padding: 10px;
+  border-right: 1px solid #ddd;
+}
+
+.tabset-dropdown > .nav-tabs > li.active {
+  display: block;
+}
+
+.tabset-dropdown > .nav-tabs > li > a,
+.tabset-dropdown > .nav-tabs > li > a:focus,
+.tabset-dropdown > .nav-tabs > li > a:hover {
+  border: none;
+  display: inline-block;
+  border-radius: 4px;
+  background-color: transparent;
+}
+
+.tabset-dropdown > .nav-tabs.nav-tabs-open > li {
+  display: block;
+  float: none;
+}
+
+.tabset-dropdown > .nav-tabs > li {
+  display: none;
+}
+</style>
+
+<!-- code folding -->
+<style type="text/css">
+.code-folding-btn { margin-bottom: 4px; }
+</style>
+
+
+
+<style type="text/css">
+
+#TOC {
+  margin: 25px 0px 20px 0px;
+}
+@media (max-width: 768px) {
+#TOC {
+  position: relative;
+  width: 100%;
+}
+}
+
+@media print {
+.toc-content {
+  /* see https://github.com/w3c/csswg-drafts/issues/4434 */
+  float: right;
+}
+}
+
+.toc-content {
+  padding-left: 30px;
+  padding-right: 40px;
+}
+
+div.main-container {
+  max-width: 1200px;
+}
+
+div.tocify {
+  width: 20%;
+  max-width: 260px;
+  max-height: 85%;
+}
+
+@media (min-width: 768px) and (max-width: 991px) {
+  div.tocify {
+    width: 25%;
+  }
+}
+
+@media (max-width: 767px) {
+  div.tocify {
+    width: 100%;
+    max-width: none;
+  }
+}
+
+.tocify ul, .tocify li {
+  line-height: 20px;
+}
+
+.tocify-subheader .tocify-item {
+  font-size: 0.90em;
+}
+
+.tocify .list-group-item {
+  border-radius: 0px;
+}
+
+
+</style>
+
+
+
+</head>
+
+<body>
+
+
+<div class="container-fluid main-container">
+
+
+<!-- setup 3col/9col grid for toc_float and main content  -->
+<div class="row">
+<div class="col-xs-12 col-sm-4 col-md-3">
+<div id="TOC" class="tocify">
+</div>
+</div>
+
+<div class="toc-content col-xs-12 col-sm-8 col-md-9">
+
+
+
+
+<div class="navbar navbar-default  navbar-fixed-top" role="navigation">
+  <div class="container">
+    <div class="navbar-header">
+      <button type="button" class="navbar-toggle collapsed" data-toggle="collapse" data-bs-toggle="collapse" data-target="#navbar" data-bs-target="#navbar">
+        <span class="icon-bar"></span>
+        <span class="icon-bar"></span>
+        <span class="icon-bar"></span>
+      </button>
+      <a class="navbar-brand" href="index.html">P. pyralis adult survival infection data analysis</a>
+    </div>
+    <div id="navbar" class="navbar-collapse collapse">
+      <ul class="nav navbar-nav">
+        <li>
+  <a href="index.html">Home</a>
+</li>
+<li>
+  <a href="about.html">About</a>
+</li>
+<li>
+  <a href="S1.EL_Mass_relationships_6_14_22.html">S1.EL_Mass_relationships</a>
+</li>
+<li>
+  <a href="S2.Exploring_linearity_condition_5_13_22.html">S2.Exploring_linearity_condition</a>
+</li>
+      </ul>
+      <ul class="nav navbar-nav navbar-right">
+        
+      </ul>
+    </div><!--/.nav-collapse -->
+  </div><!--/.container -->
+</div><!--/.navbar -->
+
+<div id="header">
+
+<div class="btn-group pull-right float-right">
+<button type="button" class="btn btn-default btn-xs btn-secondary btn-sm dropdown-toggle" data-toggle="dropdown" data-bs-toggle="dropdown" aria-haspopup="true" aria-expanded="false"><span>Code</span> <span class="caret"></span></button>
+<ul class="dropdown-menu dropdown-menu-right" style="min-width: 50px;">
+<li><a id="rmd-show-all-code" href="#">Show All Code</a></li>
+<li><a id="rmd-hide-all-code" href="#">Hide All Code</a></li>
+</ul>
+</div>
+
+
+
+<h1 class="title toc-ignore">P. pyralis adult infection survival:
+testing statistical assumptions</h1>
+<h4 class="author">Moria Chambers + Sarah Lower</h4>
+<h4 class="date">2022-09-22</h4>
+
+</div>
+
+
+<div
+id="goal-test-whether-covariates-fulfill-assumption-of-coxph-analysis-linear-relationship-with-survival"
+class="section level1">
+<h1>Goal: Test whether covariates fulfill assumption of CoxPH analysis
+(linear relationship with survival)</h1>
+<p><em>Study design:</em></p>
+<p><img src="Experimental_design.png" /></p>
+<ul>
+<li>Covariates examined for basic biological trends (e.g. does condition
+decrease over season, are there differences in condition by location)
+<ul>
+<li>Condition</li>
+<li>Season day</li>
+<li>Location</li>
+</ul></li>
+<li>Covariates tested for linear relationship with survival:
+<ul>
+<li>Condition</li>
+<li>Season day</li>
+</ul></li>
+</ul>
+<hr />
+<div id="step-1-ready-the-workspace" class="section level2">
+<h2>Step 1: Ready the workspace</h2>
+<pre class="r"><code>#clear all inputs
+rm(list = ls())
+
+#Check for necessary packages
+list.of.packages &lt;- c(&quot;survival&quot;,
+                      &quot;survminer&quot;,
+                      &quot;ggplot2&quot;, 
+                      &quot;tidyr&quot;,
+                      &quot;dplyr&quot;,
+                      &quot;Hmisc&quot;,
+                      &quot;qqplotr&quot;,
+                      &quot;ggthemes&quot;,
+                      &quot;fabricatr&quot;,
+                      &quot;gridExtra&quot;,
+                      &quot;grid&quot;,
+                      &quot;kableExtra&quot;,
+                      &quot;sjPlot&quot;,
+                      &quot;cowplot&quot;,
+                      &quot;ggpubr&quot;,
+                      &quot;patchwork&quot;,
+                      &quot;magick&quot;, #so you can use the savekable function
+                      &quot;webshot&quot;, #so you can use the savekable function
+                      &quot;lme4&quot;,
+                      &quot;RcppEigen&quot;)
+
+#should install packages that you don&#39;t have
+new.packages &lt;- list.of.packages[!(list.of.packages %in% installed.packages()[,&quot;Package&quot;])]
+if(length(new.packages)) install.packages(new.packages)
+
+#Load the package that contains the Cox Propotional Hazard Function
+library(survival)
+library(ggplot2)
+library(tidyr)
+library(dplyr)
+library(Hmisc)
+library(qqplotr)
+library(ggthemes)
+library(fabricatr)
+library(survminer)
+library(gridExtra)
+library(grid)
+library(kableExtra)
+library(sjPlot)
+library(cowplot)
+library(ggpubr)
+library(patchwork)</code></pre>
+<hr />
+</div>
+<div id="step-2-import-the-data-and-create-condition-variable"
+class="section level2">
+<h2>Step 2: Import the data and create <strong>Condition</strong>
+variable</h2>
+<pre class="r"><code>#This imports the data from a CSV file and creates the data frame PrTC
+Adult_Final&lt;-read.table(&quot;2021_Adult_Firefly_Survival_binned3.csv&quot;, header=TRUE, sep=&quot;,&quot;, dec=&quot;.&quot;,na.strings=&quot;.&quot;) 
+
+#Code to explore linearity of survival data using binned covariates:
+#add Condition variable
+Adult_Final$Condition &lt;- Adult_Final$Mass/Adult_Final$ElytralLength
+
+#Subset the data to only include uninfected controls
+Adult_Uninfected&lt;-subset(Adult_Final, DoseBacteriaNumber==&quot;0&quot;)
+#nrow(Adult_Uninfected)
+
+#This sets up the color palette using tableau20: https://jrnold.github.io/ggthemes/reference/tableau_color_pal.html
+site_colors &lt;- c(&quot;USA: Montour Co, Bucknell Natural Area&quot; = &quot;#4E79A7&quot;, 
+                 &quot;USA: Union Co, Bucknell Farm&quot; = &quot;#F28E2B&quot;, 
+                 &quot;USA: Union Co, Bucknell Ropes Course&quot; = &quot;#E15759&quot;)</code></pre>
+<hr />
+</div>
+<div id="step-3-visualizing-variation-in-condition"
+class="section level2">
+<h2>Step 3: Visualizing variation in <strong>Condition</strong></h2>
+<div id="q1.-what-does-the-condition-distribution-look-like-overall"
+class="section level3">
+<h3>Q1. What does the condition distribution look like overall?</h3>
+<ul>
+<li><strong>Raw data</strong></li>
+</ul>
+<pre class="r"><code>#generate distribution of raw data
+z &lt;- ggplot(Adult_Final, aes(x=Condition)) +
+  geom_histogram() +
+  xlab(&quot;Condition (g/mm)&quot;) +
+  ylab(&quot;N fireflies&quot;) +
+  theme(plot.title = element_text(hjust = 0.5))
+z</code></pre>
+<p><img src="S2.Exploring_linearity_condition_5_13_22_files/figure-html/condition%20distribution-1.png" style="display: block; margin: auto;" /></p>
+</div>
+<div id="q2.-by-location" class="section level3">
+<h3>Q2. …by location?</h3>
+<ul>
+<li>Data summary:</li>
+</ul>
+<pre class="r"><code>#generate tibble
+t&lt;- Adult_Final %&gt;% 
+  group_by(Location) %&gt;% 
+  summarise(N=n(), mean_length=round(mean(Condition),6), SD = round(sd(Condition), 6))
+
+#generate nice looking table
+kbl(t, col.names = c(&quot;Location&quot;, &quot;n&quot;, &quot;Mean condition (g/mm)&quot;, &quot;SD&quot;), align = &quot;lccc&quot;) %&gt;%
+  kable_classic(full_width = F, html_font = &quot;Cambria&quot;)</code></pre>
+<table class=" lightable-classic" style="font-family: Cambria; width: auto !important; margin-left: auto; margin-right: auto;">
+<thead>
+<tr>
+<th style="text-align:left;">
+Location
+</th>
+<th style="text-align:center;">
+n
+</th>
+<th style="text-align:center;">
+Mean condition (g/mm)
+</th>
+<th style="text-align:center;">
+SD
+</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td style="text-align:left;">
+USA: Montour Co, Bucknell Natural Area
+</td>
+<td style="text-align:center;">
+298
+</td>
+<td style="text-align:center;">
+0.003504
+</td>
+<td style="text-align:center;">
+0.000784
+</td>
+</tr>
+<tr>
+<td style="text-align:left;">
+USA: Union Co, Bucknell Farm
+</td>
+<td style="text-align:center;">
+70
+</td>
+<td style="text-align:center;">
+0.003650
+</td>
+<td style="text-align:center;">
+0.000768
+</td>
+</tr>
+<tr>
+<td style="text-align:left;">
+USA: Union Co, Bucknell Ropes Course
+</td>
+<td style="text-align:center;">
+470
+</td>
+<td style="text-align:center;">
+0.003460
+</td>
+<td style="text-align:center;">
+0.000706
+</td>
+</tr>
+</tbody>
+</table>
+<ul>
+<li>Raw data, three different ways:</li>
+</ul>
+<pre class="r"><code>#generate labels for sites that include sample size
+site_labels = c(paste(&quot;BNA&quot;, &quot; (n = &quot;, t$N[1], &quot;)&quot;, sep=&quot;&quot;), 
+                paste0(&quot;BUF&quot;, &quot; (n = &quot;, t$N[2], &quot;)&quot;), 
+                paste0(&quot;FDBCC&quot;,  &quot; (n = &quot;, t$N[3], &quot;)&quot;))
+
+#generate text placeholder
+a &lt;- ggplot(Adult_Final, aes(x=Condition, fill=Location)) +
+  geom_histogram(alpha= 0.5, position=&quot;identity&quot;) +
+  scale_fill_manual(name = &quot;Collection Location&quot;, labels = site_labels, values = site_colors)
+  
+legend.a &lt;- cowplot::get_legend(a)
+
+#generate histogram
+b &lt;- ggplot(Adult_Final, aes(x=Condition, fill=Location)) +
+  geom_histogram(alpha= 0.5, position=&quot;identity&quot;) +
+  xlab(&quot;Condition (g/mm)&quot;) +
+  ylab(&quot;N fireflies&quot;) +
+  theme(plot.title = element_text(hjust = 0.5), legend.position = &quot;none&quot;) +
+  scale_fill_manual(name = &quot;Location&quot;, labels = site_labels, values = site_colors)
+
+#generate violin plot
+c &lt;- ggplot(Adult_Final, aes(x=Location, y=Condition, fill=Location)) +
+  geom_violin(alpha = 0.9) +
+  theme_classic() +
+  ylab(&quot;Condition (g/mm)&quot;) +
+  theme(plot.title = element_text(hjust = 0.5), legend.position = &quot;none&quot;, axis.text.x=element_blank(), axis.title.x=element_blank()) +
+  geom_boxplot(width=0.2, alpha= 0.5, fill = &quot;white&quot;) +
+  scale_fill_manual(values = site_colors)
+
+#generate boxplot
+d &lt;- ggplot(Adult_Final, aes(x=Location, y=Condition, fill=Location)) +
+  geom_boxplot(alpha = 0.9) +
+  geom_jitter(size = 0.1)+
+  theme_classic() +
+  ylab(&quot;Condition (g/mm)&quot;) +
+  theme(plot.title = element_text(hjust = 0.5), legend.position = &quot;none&quot;, axis.text.x=element_blank(), axis.title.x=element_blank()) +
+  scale_fill_manual(values = site_colors)
+
+grid.arrange(legend.a,b,c,d, nrow=2)</code></pre>
+<p><img src="S2.Exploring_linearity_condition_5_13_22_files/figure-html/condition%20by%20site%20figures-1.png" style="display: block; margin: auto;" /></p>
+</div>
+<div id="q3.-by-seasonday" class="section level3">
+<h3>Q3. …by seasonday</h3>
+<ul>
+<li>Data summary:</li>
+</ul>
+<pre class="r"><code>#generate tibble
+t &lt;- Adult_Final %&gt;%
+  group_by(Location, SeasonDay) %&gt;%
+  summarise(N=n(), mean_length=round(mean(Condition),6), SD = round(sd(Condition),6)) %&gt;%
+  arrange(SeasonDay)
+
+#make table nice in kable
+kbl(t, col.names = c(&quot;Location&quot;, &quot;Season Day&quot;, &quot;n&quot;, &quot;Mean condition (g/mm)&quot;, &quot;SD&quot;), align = &quot;lcccc&quot;) %&gt;%
+  kable_classic(full_width = F, html_font = &quot;Cambria&quot;)</code></pre>
+<table class=" lightable-classic" style="font-family: Cambria; width: auto !important; margin-left: auto; margin-right: auto;">
+<thead>
+<tr>
+<th style="text-align:left;">
+Location
+</th>
+<th style="text-align:center;">
+Season Day
+</th>
+<th style="text-align:center;">
+n
+</th>
+<th style="text-align:center;">
+Mean condition (g/mm)
+</th>
+<th style="text-align:center;">
+SD
+</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td style="text-align:left;">
+USA: Montour Co, Bucknell Natural Area
+</td>
+<td style="text-align:center;">
+9
+</td>
+<td style="text-align:center;">
+92
+</td>
+<td style="text-align:center;">
+0.003506
+</td>
+<td style="text-align:center;">
+0.000797
+</td>
+</tr>
+<tr>
+<td style="text-align:left;">
+USA: Union Co, Bucknell Farm
+</td>
+<td style="text-align:center;">
+13
+</td>
+<td style="text-align:center;">
+47
+</td>
+<td style="text-align:center;">
+0.003692
+</td>
+<td style="text-align:center;">
+0.000852
+</td>
+</tr>
+<tr>
+<td style="text-align:left;">
+USA: Montour Co, Bucknell Natural Area
+</td>
+<td style="text-align:center;">
+15
+</td>
+<td style="text-align:center;">
+120
+</td>
+<td style="text-align:center;">
+0.003541
+</td>
+<td style="text-align:center;">
+0.000818
+</td>
+</tr>
+<tr>
+<td style="text-align:left;">
+USA: Union Co, Bucknell Ropes Course
+</td>
+<td style="text-align:center;">
+17
+</td>
+<td style="text-align:center;">
+231
+</td>
+<td style="text-align:center;">
+0.003552
+</td>
+<td style="text-align:center;">
+0.000730
+</td>
+</tr>
+<tr>
+<td style="text-align:left;">
+USA: Montour Co, Bucknell Natural Area
+</td>
+<td style="text-align:center;">
+22
+</td>
+<td style="text-align:center;">
+86
+</td>
+<td style="text-align:center;">
+0.003450
+</td>
+<td style="text-align:center;">
+0.000725
+</td>
+</tr>
+<tr>
+<td style="text-align:left;">
+USA: Union Co, Bucknell Ropes Course
+</td>
+<td style="text-align:center;">
+23
+</td>
+<td style="text-align:center;">
+95
+</td>
+<td style="text-align:center;">
+0.003459
+</td>
+<td style="text-align:center;">
+0.000714
+</td>
+</tr>
+<tr>
+<td style="text-align:left;">
+USA: Union Co, Bucknell Farm
+</td>
+<td style="text-align:center;">
+30
+</td>
+<td style="text-align:center;">
+23
+</td>
+<td style="text-align:center;">
+0.003564
+</td>
+<td style="text-align:center;">
+0.000568
+</td>
+</tr>
+<tr>
+<td style="text-align:left;">
+USA: Union Co, Bucknell Ropes Course
+</td>
+<td style="text-align:center;">
+31
+</td>
+<td style="text-align:center;">
+90
+</td>
+<td style="text-align:center;">
+0.003247
+</td>
+<td style="text-align:center;">
+0.000614
+</td>
+</tr>
+<tr>
+<td style="text-align:left;">
+USA: Union Co, Bucknell Ropes Course
+</td>
+<td style="text-align:center;">
+36
+</td>
+<td style="text-align:center;">
+54
+</td>
+<td style="text-align:center;">
+0.003421
+</td>
+<td style="text-align:center;">
+0.000664
+</td>
+</tr>
+</tbody>
+</table>
+<ul>
+<li>Raw data, three different ways:</li>
+</ul>
+<pre class="r"><code>#generate labels for seasondays that include sample size
+t$SeasonDayLabel = paste(t$SeasonDay, &quot; (&quot;, t$N, &quot;)&quot;, sep =&quot;&quot;)
+  
+seasonday_label &lt;- c(
+  &#39;9&#39; = t$SeasonDayLabel[1],
+  &#39;13&#39; = t$SeasonDayLabel[2],
+  &#39;15&#39; = t$SeasonDayLabel[3],
+  &#39;17&#39; = t$SeasonDayLabel[4],
+  &#39;22&#39; = t$SeasonDayLabel[5],
+  &#39;23&#39; = t$SeasonDayLabel[6],
+  &#39;30&#39; = t$SeasonDayLabel[7],
+  &#39;31&#39; = t$SeasonDayLabel[8],
+  &#39;36&#39; = t$SeasonDayLabel[9]
+  )
+
+#generate legend
+e &lt;- ggplot(Adult_Final, aes(x=Condition, fill=Location)) +
+  geom_histogram() +
+  xlab(&quot;Condition (g/mm)&quot;) +
+  ylab(&quot;N fireflies&quot;) +
+  theme(plot.title = element_text(hjust = 0.5)) +
+  facet_wrap(~SeasonDay, labeller = as_labeller(seasonday_label)) +
+  scale_fill_manual(name = &quot;Location&quot;, labels = c(&quot;BNA&quot;, &quot;BUF&quot;, &quot;FDBCC&quot;), values = c(&quot;#4E79A7&quot;, &quot;#F28E2B&quot;, &quot;#E15759&quot;))
+
+legend.e &lt;- cowplot::get_legend(e)
+
+#generate histogram
+f &lt;- ggplot(Adult_Final, aes(x=Condition, fill=Location)) +
+  geom_histogram() +
+  xlab(&quot;Condition (g/mm)&quot;) +
+  ylab(&quot;N fireflies&quot;) +
+  ggtitle(&quot;SeasonDay (n)&quot;) +
+  theme(plot.title = element_text(hjust = 0.5), legend.position = &quot;none&quot;, axis.text.x = element_text(angle = 90)) +
+  facet_wrap(~SeasonDay, labeller = as_labeller(seasonday_label), ncol=5) +
+  scale_fill_manual(name = &quot;Location&quot;, labels = c(&quot;BNA&quot;, &quot;BUF&quot;, &quot;FDBCC&quot;), values = c(&quot;#4E79A7&quot;, &quot;#F28E2B&quot;, &quot;#E15759&quot;))
+
+#generate violin plot by seasonday
+g &lt;- ggplot(Adult_Final, aes(x=as.factor(SeasonDay), y=Condition, fill = Location)) +
+  geom_violin(alpha = 0.9) +
+  theme_classic() +
+  ylab(&quot;Condition (g/mm)&quot;) +
+  xlab(&quot;Season Day&quot;) +
+  theme(plot.title = element_text(hjust = 0.5), axis.text.x = element_text(angle = 90), legend.position = &quot;none&quot;) +
+  geom_boxplot(width=0.2, fill = &quot;white&quot;) +
+  scale_fill_manual(name = &quot;Location&quot;, labels = c(&quot;BNA&quot;, &quot;BUF&quot;, &quot;FDBCC&quot;), values = c(&quot;#4E79A7&quot;, &quot;#F28E2B&quot;, &quot;#E15759&quot;))
+
+#generate violin plot by site
+h &lt;- ggplot(Adult_Final, aes(x=as.factor(SeasonDay), y=Condition, fill = Location)) +
+  geom_violin(alpha = 0.9) +
+  theme_classic() +
+  ylab(&quot;Condition (g/mm)&quot;) +
+  xlab(&quot;Season Day&quot;) +
+  theme(plot.title = element_text(hjust = 0.5), legend.position = &quot;none&quot;, axis.text.x = element_text(angle = 90)) +
+  facet_wrap(~Location, labeller = labeller(Location = 
+    c(&quot;USA: Montour Co, Bucknell Natural Area&quot; = &quot;BNA&quot;,
+      &quot;USA: Union Co, Bucknell Farm&quot; = &quot;BUF&quot;,
+      &quot;USA: Union Co, Bucknell Ropes Course&quot; = &quot;FDBCC&quot;))) +
+  geom_boxplot(width=0.2, fill = &quot;white&quot;) +
+  scale_fill_manual(values = c(&quot;#4E79A7&quot;, &quot;#F28E2B&quot;, &quot;#E15759&quot;))
+
+lay1 &lt;- rbind(c(2,2,2,1))
+lay2 &lt;- rbind(c(1,1,2,2,2))
+
+g1 &lt;- arrangeGrob(legend.e, f, layout_matrix = lay1)
+g2 &lt;- arrangeGrob(g,h, layout_matrix = lay2)
+ 
+grid.arrange(g1, g2, nrow=2)                  </code></pre>
+<p><img src="S2.Exploring_linearity_condition_5_13_22_files/figure-html/condition%20by%20seasonday%20plots-1.png" style="display: block; margin: auto;" /></p>
+</div>
+<div
+id="q4.-are-the-distributions-within-each-location-seasonday-normal"
+class="section level3">
+<h3>Q4. Are the distributions within each Location * SeasonDay
+normal?</h3>
+<p>Testing the <em>raw data:</em></p>
+<ul>
+<li><strong>Q-Q plot</strong> for the raw data (left) and
+<strong>Shapiro test</strong> (bottom right)</li>
+</ul>
+<pre class="r"><code>#qq plots to assess normality
+q &lt;- ggplot(Adult_Final, aes(sample=Condition, color=Location)) +
+  stat_qq_band(bandType = &quot;pointwise&quot;, fill = &quot;#8DA0CB&quot;, alpha = 0.4) + 
+  stat_qq_line(color = &quot;#8DA0CB&quot;) +
+  stat_qq_point() +
+  ggtitle(&quot;Season Day&quot;) +
+  facet_wrap(~SeasonDay) +
+  scale_color_manual(name = &quot;Location&quot;, labels = c(&quot;BNA&quot;, &quot;BUF&quot;, &quot;FDBCC&quot;), values = c(&quot;#4E79A7&quot;, &quot;#F28E2B&quot;, &quot;#E15759&quot;)) +
+  theme(legend.position = &quot;none&quot;)
+
+#statistically test
+shapiro.table &lt;- NULL
+for (day in levels(factor(Adult_Final$SeasonDay))){
+  #subset table
+  table.sub &lt;- Adult_Final[Adult_Final$SeasonDay == day,]
+  test.result &lt;- (shapiro.test(table.sub$Condition))
+  info &lt;- data.frame(SeasonDay = day, W = round(test.result[1]$statistic, 2), p = round(test.result[2]$p.value, 2))
+  shapiro.table &lt;- rbind(shapiro.table, info)
+}
+
+#create kable filename
+kable_filename = paste(&quot;Condition_shapiro&quot;, &quot;.png&quot;, sep=&quot;&quot;)
+
+#generate nice table with kable
+kbl(shapiro.table, row.names = FALSE, col.names = c(&quot;Season Day&quot;, &quot;W&quot;, &quot;P&quot;), align = &quot;ccc&quot;)  %&gt;%
+  kable_classic(full_width = F, html_font = &quot;Cambria&quot;) %&gt;% 
+  save_kable(file = kable_filename, bs_theme = &quot;cerulean&quot;, zoom = 7) 
+
+#make big plot with table
+#read in kable table as image
+r &lt;- ggdraw() +
+  draw_image(kable_filename)
+
+#stack the legend on top of the table
+g3 &lt;- arrangeGrob(legend.e, r, nrow =2)
+
+#make the column width layout
+shapiro_layout &lt;- rbind(c(1,1,1,2))
+
+#plot the graph next to the legend and table
+grid.arrange(q, g3, nrow = 1,  layout_matrix = shapiro_layout)</code></pre>
+<p><img src="S2.Exploring_linearity_condition_5_13_22_files/figure-html/condition%20qq%20plots-1.png" style="display: block; margin: auto auto auto 0;" /></p>
+<p><strong>Conclusions:</strong></p>
+<ul>
+<li><em>p</em> &lt; 0.05 for conditions distributions from:
+<ul>
+<li>Day 15</li>
+<li>Day 17</li>
+<li>Day 23</li>
+<li>Day 31</li>
+</ul></li>
+</ul>
+<p><em>4/9 collection days are not normally distributed, but all of
+these days have sample size greater than 30, meaning parametric stats
+should be fine. Proceed with using un-transformed condition in
+downstream analysis.</em></p>
+</div>
+<div id="q6.-do-seasonday-and-location-predict-condition"
+class="section level3">
+<h3>Q6. Do seasonday and location predict condition?</h3>
+<ul>
+<li>Summary of effects:</li>
+</ul>
+<pre class="r"><code>Condition&lt;-lm(Condition~SeasonDay*Location, data=Adult_Final)
+summary(Condition)</code></pre>
+<pre><code>## 
+## Call:
+## lm(formula = Condition ~ SeasonDay * Location, data = Adult_Final)
+## 
+## Residuals:
+##        Min         1Q     Median         3Q        Max 
+## -2.072e-03 -5.591e-04 -6.403e-05  4.587e-04  2.610e-03 
+## 
+## Coefficients:
+##                                                          Estimate Std. Error
+## (Intercept)                                             3.571e-03  1.358e-04
+## SeasonDay                                              -4.468e-06  8.502e-06
+## LocationUSA: Union Co, Bucknell Farm                    2.192e-04  2.613e-04
+## LocationUSA: Union Co, Bucknell Ropes Course            1.946e-04  1.791e-04
+## SeasonDay:LocationUSA: Union Co, Bucknell Farm         -3.094e-06  1.393e-05
+## SeasonDay:LocationUSA: Union Co, Bucknell Ropes Course -8.798e-06  9.783e-06
+##                                                        t value Pr(&gt;|t|)    
+## (Intercept)                                             26.290   &lt;2e-16 ***
+## SeasonDay                                               -0.526    0.599    
+## LocationUSA: Union Co, Bucknell Farm                     0.839    0.402    
+## LocationUSA: Union Co, Bucknell Ropes Course             1.086    0.278    
+## SeasonDay:LocationUSA: Union Co, Bucknell Farm          -0.222    0.824    
+## SeasonDay:LocationUSA: Union Co, Bucknell Ropes Course  -0.899    0.369    
+## ---
+## Signif. codes:  0 &#39;***&#39; 0.001 &#39;**&#39; 0.01 &#39;*&#39; 0.05 &#39;.&#39; 0.1 &#39; &#39; 1
+## 
+## Residual standard error: 0.0007372 on 832 degrees of freedom
+## Multiple R-squared:  0.01473,    Adjusted R-squared:  0.008813 
+## F-statistic: 2.488 on 5 and 832 DF,  p-value: 0.03003</code></pre>
+<ul>
+<li>ANOVA(model) results:</li>
+</ul>
+<pre class="r"><code>kbl(anova(Condition), digits = 3)  %&gt;%
+  kable_classic(full_width = F, html_font = &quot;Cambria&quot;)</code></pre>
+<table class=" lightable-classic" style="font-family: Cambria; width: auto !important; margin-left: auto; margin-right: auto;">
+<thead>
+<tr>
+<th style="text-align:left;">
+</th>
+<th style="text-align:right;">
+Df
+</th>
+<th style="text-align:right;">
+Sum Sq
+</th>
+<th style="text-align:right;">
+Mean Sq
+</th>
+<th style="text-align:right;">
+F value
+</th>
+<th style="text-align:right;">
+Pr(&gt;F)
+</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td style="text-align:left;">
+SeasonDay
+</td>
+<td style="text-align:right;">
+1
+</td>
+<td style="text-align:right;">
+0
+</td>
+<td style="text-align:right;">
+0
+</td>
+<td style="text-align:right;">
+8.119
+</td>
+<td style="text-align:right;">
+0.004
+</td>
+</tr>
+<tr>
+<td style="text-align:left;">
+Location
+</td>
+<td style="text-align:right;">
+2
+</td>
+<td style="text-align:right;">
+0
+</td>
+<td style="text-align:right;">
+0
+</td>
+<td style="text-align:right;">
+1.712
+</td>
+<td style="text-align:right;">
+0.181
+</td>
+</tr>
+<tr>
+<td style="text-align:left;">
+SeasonDay:Location
+</td>
+<td style="text-align:right;">
+2
+</td>
+<td style="text-align:right;">
+0
+</td>
+<td style="text-align:right;">
+0
+</td>
+<td style="text-align:right;">
+0.450
+</td>
+<td style="text-align:right;">
+0.638
+</td>
+</tr>
+<tr>
+<td style="text-align:left;">
+Residuals
+</td>
+<td style="text-align:right;">
+832
+</td>
+<td style="text-align:right;">
+0
+</td>
+<td style="text-align:right;">
+0
+</td>
+<td style="text-align:right;">
+NA
+</td>
+<td style="text-align:right;">
+NA
+</td>
+</tr>
+</tbody>
+</table>
+<ul>
+<li>For <strong>Condition</strong>, only <strong>SeasonDay</strong> is
+significant (p = 0.01).</li>
+</ul>
+</div>
+<div id="conclusions" class="section level3">
+<h3>Conclusions</h3>
+<ul>
+<li><p><strong>Season Day</strong> matters (p = 0.004) - there is a
+decrease in condition over the season.</p></li>
+<li><p><strong>Location</strong> doesn’t really matter (caveats:
+sampling efforts at sites were not equal and non-randomly distributed
+across the season)</p></li>
+<li><p>Test un-transformed condition in downstream linearity assessment
+analysis</p></li>
+<li><p>Plots:</p>
+<ul>
+<li>Blue: BNA</li>
+<li>Red: BUF</li>
+<li>Gold: FDBCC</li>
+</ul></li>
+</ul>
+</div>
+<div id="plot" class="section level3">
+<h3>Plot</h3>
+<pre class="r"><code>#plot with all locations over the season
+p_condition_by_season_day &lt;- ggplot(Adult_Final, aes(x=as.numeric(SeasonDay), y=Condition)) +
+  geom_point(size = 1, alpha = 0.7) +
+  theme_classic() +
+  ylab(&quot;Condition (g/mm)&quot;) +
+  xlab(&quot;Season Day&quot;) +
+  theme(plot.title = element_text(hjust = 0.5), axis.text.x = element_text(angle = 90), legend.position = &quot;none&quot;) +
+  geom_smooth(method = &quot;lm&quot;, se=FALSE, color = &quot;gray23&quot;) +
+  stat_regline_equation(label.x = c(25), label.y = 0.0063, aes(label = ..eq.label..)) +
+  stat_regline_equation(label.x = c(25), label.y = 0.0059, aes(label = ..rr.label..))
+
+p_condition_by_season_day</code></pre>
+<p><img src="S2.Exploring_linearity_condition_5_13_22_files/figure-html/condition%20plot%20for%20season%20day-1.png" style="display: block; margin: auto;" /></p>
+<hr />
+</div>
+</div>
+<div id="step-4-exploring-linearity-for-survival-analysis"
+class="section level2">
+<h2>Step 4: Exploring linearity for survival analysis</h2>
+<p>Using the subset of the data of only UNINFECTED fireflies (either
+uninjected or injected with sterile PBS solution), we are exploring
+whether we need to transform any of our explanatory variables, or
+convert them to a different variable type (ordered factor vs categorical
+vs quantitative).</p>
+<p>There are 223 fireflies in the UNINFECTED dataset.</p>
+<p>Procedure: Assign individual fireflies to bins based on the
+explanatory variable using the whole dataset, not just uninfected
+fireflies. Want bins to be equidistant across the range of values of the
+explanatory variable. When run the model on just the uninfected subset,
+if the beta values are linear, then the explanatory variable can be
+considered quantitative in survival analysis.</p>
+<div id="condition" class="section level3">
+<h3><strong>Condition</strong></h3>
+<div
+id="q.-can-condition-be-quantitative-or-do-we-need-to-stratify-the-analysis"
+class="section level4">
+<h4>Q. Can <strong>Condition</strong> be quantitative or do we need to
+stratify the analysis?</h4>
+<ul>
+<li>Summary:
+<ul>
+<li><strong>Condition</strong> binned into <strong>8
+increments</strong></li>
+<li>Seems good sample size for number of individuals in each bin, though
+the top and bottom bins are poorly supported (few fireflies)</li>
+<li>CONCLUSION: <strong>Condition</strong> has a generally linear
+relationship, use as-is</li>
+</ul></li>
+<li>Analysis:
+<ul>
+<li>Checking bins for sample size</li>
+</ul></li>
+</ul>
+<pre class="r"><code>#for Condition
+Adult_Final$ConditionBins &lt;- as.numeric(cut(Adult_Final$Condition, 8))
+Adult_Final$ConditionBinsF&lt;-as.factor(Adult_Final$ConditionBins)
+
+#Subset the data to only include uninfected controls
+Adult_Uninfected&lt;-subset(Adult_Final, DoseBacteriaNumber==&quot;0&quot;)
+
+t &lt;- t(table(Adult_Uninfected$ConditionBins))
+row.names(t) &lt;- &quot;n&quot;
+
+kbl(t) %&gt;%
+  kable_classic(full_width = F, html_font = &quot;Cambria&quot;, position = &quot;center&quot;) %&gt;%
+  add_header_above(c(&quot; &quot;, &quot;Bins&quot;= 8))</code></pre>
+<table class=" lightable-classic" style="font-family: Cambria; width: auto !important; margin-left: auto; margin-right: auto;">
+<thead>
+<tr>
+<th style="empty-cells: hide;" colspan="1">
+</th>
+<th style="padding-bottom:0; padding-left:3px;padding-right:3px;text-align: center; " colspan="8">
+<div style="border-bottom: 1px solid #111111; margin-bottom: -1px; ">
+Bins
+</div>
+</th>
+</tr>
+<tr>
+<th style="text-align:left;">
+</th>
+<th style="text-align:right;">
+1
+</th>
+<th style="text-align:right;">
+2
+</th>
+<th style="text-align:right;">
+3
+</th>
+<th style="text-align:right;">
+4
+</th>
+<th style="text-align:right;">
+5
+</th>
+<th style="text-align:right;">
+6
+</th>
+<th style="text-align:right;">
+7
+</th>
+<th style="text-align:right;">
+8
+</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td style="text-align:left;">
+n
+</td>
+<td style="text-align:right;">
+2
+</td>
+<td style="text-align:right;">
+29
+</td>
+<td style="text-align:right;">
+68
+</td>
+<td style="text-align:right;">
+75
+</td>
+<td style="text-align:right;">
+30
+</td>
+<td style="text-align:right;">
+11
+</td>
+<td style="text-align:right;">
+6
+</td>
+<td style="text-align:right;">
+2
+</td>
+</tr>
+</tbody>
+</table>
+<ul>
+<li>Checking coefficients for linearity:</li>
+</ul>
+<pre class="r"><code>modelCond&lt;-coxph(Surv(Days_post_infection,Status)~ConditionBinsF,data=Adult_Uninfected)
+summary(modelCond)</code></pre>
+<pre><code>## Call:
+## coxph(formula = Surv(Days_post_infection, Status) ~ ConditionBinsF, 
+##     data = Adult_Uninfected)
+## 
+##   n= 223, number of events= 182 
+## 
+##                     coef exp(coef) se(coef)      z Pr(&gt;|z|)  
+## ConditionBinsF2 -0.60247   0.54746  1.02714 -0.587   0.5575  
+## ConditionBinsF3 -0.70458   0.49431  1.01426 -0.695   0.4873  
+## ConditionBinsF4 -1.39611   0.24756  1.01756 -1.372   0.1701  
+## ConditionBinsF5 -1.66774   0.18867  1.03038 -1.619   0.1055  
+## ConditionBinsF6 -2.40944   0.08987  1.06703 -2.258   0.0239 *
+## ConditionBinsF7 -1.16527   0.31184  1.08721 -1.072   0.2838  
+## ConditionBinsF8 -2.91551   0.05418  1.24445 -2.343   0.0191 *
+## ---
+## Signif. codes:  0 &#39;***&#39; 0.001 &#39;**&#39; 0.01 &#39;*&#39; 0.05 &#39;.&#39; 0.1 &#39; &#39; 1
+## 
+##                 exp(coef) exp(-coef) lower .95 upper .95
+## ConditionBinsF2   0.54746      1.827  0.073122    4.0988
+## ConditionBinsF3   0.49431      2.023  0.067712    3.6086
+## ConditionBinsF4   0.24756      4.039  0.033692    1.8190
+## ConditionBinsF5   0.18867      5.300  0.025041    1.4216
+## ConditionBinsF6   0.08987     11.128  0.011100    0.7275
+## ConditionBinsF7   0.31184      3.207  0.037025    2.6264
+## ConditionBinsF8   0.05418     18.458  0.004726    0.6210
+## 
+## Concordance= 0.637  (se = 0.026 )
+## Likelihood ratio test= 45.13  on 7 df,   p=1e-07
+## Wald test            = 40.19  on 7 df,   p=1e-06
+## Score (logrank) test = 43.78  on 7 df,   p=2e-07</code></pre>
+<pre class="r"><code>df &lt;- tibble(Bin = names(modelCond$coefficients), Coef = (modelCond$coefficients))
+          
+ggplot(df,aes(x=Bin, y=Coef)) +
+  geom_point() +
+  theme_classic() +
+  theme(axis.text.x = element_text(angle = 90, vjust = 0.5, hjust=1))</code></pre>
+<p><img src="S2.Exploring_linearity_condition_5_13_22_files/figure-html/Determine%20whether%20condition%20can%20be%20quantitative%20-%20coef-1.png" style="display: block; margin: auto;" /></p>
+<hr />
+</div>
+</div>
+<div id="seasonday" class="section level3">
+<h3><strong>SeasonDay</strong></h3>
+<div id="q.-can-seasonday-be-considered-linear" class="section level4">
+<h4>Q. Can <strong>SeasonDay</strong> be considered linear?</h4>
+<p>+Summary: + <strong>Season Day</strong> binned into <strong>5
+increments</strong> + The fourth bin poorly supported (low sample size)
++ The intervals between bins are pretty good (0.1,0.4,0.45,0.5) +
+CONCLUSION: Generally looks linear! Use as is.</p>
+<ul>
+<li>Analysis
+<ul>
+<li>Checking bins for sample size</li>
+</ul></li>
+</ul>
+<pre class="r"><code>#Season Day with 5 increments, fourth bin poorly supported, intervals between bins (0.1,0.4,0.45,0.5) - doesn&#39;t look great. Do we need to take other variables into account first? Then would it act linearly?
+
+#set up bins for SeasonDay
+Adult_Final$SeasonDayBins &lt;- as.numeric(cut(Adult_Final$SeasonDay, 5))
+#table(Adult_Final$SeasonDayBins) #how many in each category
+Adult_Final$SeasonDayBinsF&lt;-as.factor(Adult_Final$SeasonDayBins)
+
+#Subset the data to only include uninfected controls
+Adult_Uninfected&lt;-subset(Adult_Final, DoseBacteriaNumber==&quot;0&quot;)
+#nrow(Adult_Uninfected)
+
+t &lt;- t(table(Adult_Uninfected$SeasonDayBinsF))
+row.names(t) &lt;- &quot;n&quot;
+
+kbl(t) %&gt;%
+  kable_classic(full_width = F, html_font = &quot;Cambria&quot;, position = &quot;center&quot;) %&gt;%
+  add_header_above(c(&quot; &quot;, &quot;Bins&quot;= 5))</code></pre>
+<table class=" lightable-classic" style="font-family: Cambria; width: auto !important; margin-left: auto; margin-right: auto;">
+<thead>
+<tr>
+<th style="empty-cells: hide;" colspan="1">
+</th>
+<th style="padding-bottom:0; padding-left:3px;padding-right:3px;text-align: center; " colspan="5">
+<div style="border-bottom: 1px solid #111111; margin-bottom: -1px; ">
+Bins
+</div>
+</th>
+</tr>
+<tr>
+<th style="text-align:left;">
+</th>
+<th style="text-align:right;">
+1
+</th>
+<th style="text-align:right;">
+2
+</th>
+<th style="text-align:right;">
+3
+</th>
+<th style="text-align:right;">
+4
+</th>
+<th style="text-align:right;">
+5
+</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td style="text-align:left;">
+n
+</td>
+<td style="text-align:right;">
+44
+</td>
+<td style="text-align:right;">
+74
+</td>
+<td style="text-align:right;">
+51
+</td>
+<td style="text-align:right;">
+6
+</td>
+<td style="text-align:right;">
+48
+</td>
+</tr>
+</tbody>
+</table>
+<ul>
+<li>Checking coefficients for linearity:</li>
+</ul>
+<pre class="r"><code>modelSD&lt;-coxph(Surv(Days_post_infection,Status)~SeasonDayBinsF,data=Adult_Uninfected)
+summary(modelSD)</code></pre>
+<pre><code>## Call:
+## coxph(formula = Surv(Days_post_infection, Status) ~ SeasonDayBinsF, 
+##     data = Adult_Uninfected)
+## 
+##   n= 223, number of events= 182 
+## 
+##                    coef exp(coef) se(coef)     z Pr(&gt;|z|)   
+## SeasonDayBinsF2 0.06884   1.07126  0.19227 0.358  0.72033   
+## SeasonDayBinsF3 0.54712   1.72828  0.20696 2.644  0.00820 **
+## SeasonDayBinsF4 0.95171   2.59013  0.43999 2.163  0.03054 * 
+## SeasonDayBinsF5 1.48494   4.41472  0.50126 2.962  0.00305 **
+## ---
+## Signif. codes:  0 &#39;***&#39; 0.001 &#39;**&#39; 0.01 &#39;*&#39; 0.05 &#39;.&#39; 0.1 &#39; &#39; 1
+## 
+##                 exp(coef) exp(-coef) lower .95 upper .95
+## SeasonDayBinsF2     1.071     0.9335    0.7349     1.562
+## SeasonDayBinsF3     1.728     0.5786    1.1520     2.593
+## SeasonDayBinsF4     2.590     0.3861    1.0935     6.135
+## SeasonDayBinsF5     4.415     0.2265    1.6528    11.792
+## 
+## Concordance= 0.607  (se = 0.022 )
+## Likelihood ratio test= 16.71  on 4 df,   p=0.002
+## Wald test            = 18.21  on 4 df,   p=0.001
+## Score (logrank) test = 19.43  on 4 df,   p=6e-04</code></pre>
+<pre class="r"><code>df &lt;- tibble(Bin = names(modelSD$coefficients), Coef = (modelSD$coefficients))
+          
+ggplot(df,aes(x=Bin, y=Coef)) +
+  geom_point() +
+  theme_classic() +
+  theme(axis.text.x = element_text(angle = 90, vjust = 0.5, hjust=1))</code></pre>
+<p><img src="S2.Exploring_linearity_condition_5_13_22_files/figure-html/Determine%20whether%20Seasonday%20can%20be%20quantitative%20-%20coef-1.png" style="display: block; margin: auto;" /></p>
+<hr />
+</div>
+</div>
+</div>
+<div id="step-4-session-info" class="section level2">
+<h2>Step 4: Session Info</h2>
+<pre class="r"><code>sessionInfo()</code></pre>
+<pre><code>## R version 4.2.1 (2022-06-23)
+## Platform: x86_64-apple-darwin17.0 (64-bit)
+## Running under: macOS Catalina 10.15.7
+## 
+## Matrix products: default
+## BLAS:   /Library/Frameworks/R.framework/Versions/4.2/Resources/lib/libRblas.0.dylib
+## LAPACK: /Library/Frameworks/R.framework/Versions/4.2/Resources/lib/libRlapack.dylib
+## 
+## locale:
+## [1] en_US.UTF-8/en_US.UTF-8/en_US.UTF-8/C/en_US.UTF-8/en_US.UTF-8
+## 
+## attached base packages:
+## [1] grid      stats     graphics  grDevices utils     datasets  methods  
+## [8] base     
+## 
+## other attached packages:
+##  [1] survminer_0.4.9  patchwork_1.1.2  ggpubr_0.4.0     cowplot_1.1.1   
+##  [5] sjPlot_2.8.11    kableExtra_1.3.4 gridExtra_2.3    fabricatr_1.0.0 
+##  [9] ggthemes_4.2.4   qqplotr_0.0.5    Hmisc_4.7-1      Formula_1.2-4   
+## [13] survival_3.4-0   lattice_0.20-45  dplyr_1.0.10     tidyr_1.2.1     
+## [17] ggplot2_3.3.6   
+## 
+## loaded via a namespace (and not attached):
+##   [1] minqa_1.2.4         colorspace_2.0-3    ggsignif_0.6.3     
+##   [4] deldir_1.0-6        ellipsis_0.3.2      sjlabelled_1.2.0   
+##   [7] estimability_1.4.1  htmlTable_2.4.1     parameters_0.18.2  
+##  [10] base64enc_0.1-3     rstudioapi_0.14     farver_2.1.1       
+##  [13] fansi_1.0.3         mvtnorm_1.1-3       xml2_1.3.3         
+##  [16] splines_4.2.1       cachem_1.0.6        robustbase_0.95-0  
+##  [19] knitr_1.40          sjmisc_2.8.9        polynom_1.4-1      
+##  [22] jsonlite_1.8.0      nloptr_2.0.3        ggeffects_1.1.3    
+##  [25] km.ci_0.5-6         broom_1.0.1         cluster_2.1.4      
+##  [28] png_0.1-7           effectsize_0.7.0.5  compiler_4.2.1     
+##  [31] httr_1.4.4          sjstats_0.18.1      emmeans_1.8.1-1    
+##  [34] backports_1.4.1     assertthat_0.2.1    Matrix_1.5-1       
+##  [37] fastmap_1.1.0       cli_3.4.0           htmltools_0.5.3    
+##  [40] tools_4.2.1         gtable_0.3.1        glue_1.6.2         
+##  [43] Rcpp_1.0.9          carData_3.0-5       jquerylib_0.1.4    
+##  [46] vctrs_0.4.1         svglite_2.1.0       nlme_3.1-159       
+##  [49] insight_0.18.4      xfun_0.33           stringr_1.4.1      
+##  [52] ps_1.7.1            lme4_1.1-30         rvest_1.0.3        
+##  [55] lifecycle_1.0.2     rstatix_0.7.0       DEoptimR_1.0-11    
+##  [58] zoo_1.8-11          MASS_7.3-58.1       scales_1.2.1       
+##  [61] RColorBrewer_1.1-3  yaml_2.3.5          KMsurv_0.1-5       
+##  [64] sass_0.4.2          rpart_4.1.16        latticeExtra_0.6-30
+##  [67] stringi_1.7.8       highr_0.9           bayestestR_0.13.0  
+##  [70] checkmate_2.1.0     boot_1.3-28         rlang_1.0.5        
+##  [73] pkgconfig_2.0.3     systemfonts_1.0.4   evaluate_0.16      
+##  [76] purrr_0.3.4         htmlwidgets_1.5.4   labeling_0.4.2     
+##  [79] tidyselect_1.1.2    processx_3.7.0      magrittr_2.0.3     
+##  [82] R6_2.5.1            magick_2.7.3        generics_0.1.3     
+##  [85] DBI_1.1.3           mgcv_1.8-40         pillar_1.8.1       
+##  [88] foreign_0.8-82      withr_2.5.0         datawizard_0.6.0   
+##  [91] abind_1.4-5         nnet_7.3-17         tibble_3.1.8       
+##  [94] performance_0.9.2   modelr_0.1.9        car_3.1-0          
+##  [97] survMisc_0.5.6      interp_1.1-3        utf8_1.2.2         
+## [100] rmarkdown_2.16      jpeg_0.1-9          data.table_1.14.2  
+## [103] callr_3.7.2         digest_0.6.29       webshot_0.5.3      
+## [106] xtable_1.8-4        munsell_0.5.0       viridisLite_0.4.1  
+## [109] bslib_0.4.0</code></pre>
+</div>
+</div>
+
+
+
+</div>
+</div>
+
+</div>
+
+<script>
+
+// add bootstrap table styles to pandoc tables
+function bootstrapStylePandocTables() {
+  $('tr.odd').parent('tbody').parent('table').addClass('table table-condensed');
+}
+$(document).ready(function () {
+  bootstrapStylePandocTables();
+});
+
+
+</script>
+
+<!-- tabsets -->
+
+<script>
+$(document).ready(function () {
+  window.buildTabsets("TOC");
+});
+
+$(document).ready(function () {
+  $('.tabset-dropdown > .nav-tabs > li').click(function () {
+    $(this).parent().toggleClass('nav-tabs-open');
+  });
+});
+</script>
+
+<!-- code folding -->
+<script>
+$(document).ready(function () {
+  window.initializeCodeFolding("hide" === "show");
+});
+</script>
+
+<script>
+$(document).ready(function ()  {
+
+    // temporarily add toc-ignore selector to headers for the consistency with Pandoc
+    $('.unlisted.unnumbered').addClass('toc-ignore')
+
+    // move toc-ignore selectors from section div to header
+    $('div.section.toc-ignore')
+        .removeClass('toc-ignore')
+        .children('h1,h2,h3,h4,h5').addClass('toc-ignore');
+
+    // establish options
+    var options = {
+      selectors: "h1,h2,h3,h4",
+      theme: "bootstrap3",
+      context: '.toc-content',
+      hashGenerator: function (text) {
+        return text.replace(/[.\\/?&!#<>]/g, '').replace(/\s/g, '_');
+      },
+      ignoreSelector: ".toc-ignore",
+      scrollTo: 0
+    };
+    options.showAndHide = true;
+    options.smoothScroll = true;
+
+    // tocify
+    var toc = $("#TOC").tocify(options).data("toc-tocify");
+});
+</script>
+
+<!-- dynamically load mathjax for compatibility with self-contained -->
+<script>
+  (function () {
+    var script = document.createElement("script");
+    script.type = "text/javascript";
+    script.src  = "https://mathjax.rstudio.com/latest/MathJax.js?config=TeX-AMS-MML_HTMLorMML";
+    document.getElementsByTagName("head")[0].appendChild(script);
+  })();
+</script>
+
+</body>
+</html>
