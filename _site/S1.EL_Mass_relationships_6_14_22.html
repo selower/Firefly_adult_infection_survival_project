@@ -339,6 +339,15 @@ div.tocify {
 <li>
   <a href="about.html">About</a>
 </li>
+<li>
+  <a href="Hello_world.html">Hello World</a>
+</li>
+<li>
+  <a href="S1.EL_Mass_relationships_6_14_22.html">S1.EL_Mass_relationships</a>
+</li>
+<li>
+  <a href="S2.Exploring_linearity_condition_5_13_22.html">S2.Exploring_linearity_condition</a>
+</li>
       </ul>
       <ul class="nav navbar-nav navbar-right">
         
@@ -2463,10 +2472,11 @@ w</code></pre>
 ## [1] grid      stats     graphics  grDevices utils     datasets  methods   base     
 ## 
 ## other attached packages:
-##  [1] patchwork_1.1.2  ggpubr_0.4.0     cowplot_1.1.1    sjPlot_2.8.11   
-##  [5] kableExtra_1.3.4 gridExtra_2.3    fabricatr_1.0.0  ggthemes_4.2.4  
-##  [9] qqplotr_0.0.5    Hmisc_4.7-1      Formula_1.2-4    survival_3.4-0  
-## [13] lattice_0.20-45  dplyr_1.0.10     tidyr_1.2.1      ggplot2_3.3.6   
+##  [1] survminer_0.4.9  patchwork_1.1.2  ggpubr_0.4.0     cowplot_1.1.1   
+##  [5] sjPlot_2.8.11    kableExtra_1.3.4 gridExtra_2.3    fabricatr_1.0.0 
+##  [9] ggthemes_4.2.4   qqplotr_0.0.5    Hmisc_4.7-1      Formula_1.2-4   
+## [13] survival_3.4-0   lattice_0.20-45  dplyr_1.0.10     tidyr_1.2.1     
+## [17] ggplot2_3.3.6   
 ## 
 ## loaded via a namespace (and not attached):
 ##   [1] minqa_1.2.4         colorspace_2.0-3    ggsignif_0.6.3      deldir_1.0-6       
@@ -2475,26 +2485,27 @@ w</code></pre>
 ##  [13] fansi_1.0.3         mvtnorm_1.1-3       xml2_1.3.3          splines_4.2.1      
 ##  [17] cachem_1.0.6        robustbase_0.95-0   knitr_1.40          sjmisc_2.8.9       
 ##  [21] polynom_1.4-1       jsonlite_1.8.0      nloptr_2.0.3        ggeffects_1.1.3    
-##  [25] broom_1.0.1         cluster_2.1.4       png_0.1-7           effectsize_0.7.0.5 
-##  [29] compiler_4.2.1      httr_1.4.4          sjstats_0.18.1      emmeans_1.8.1-1    
-##  [33] backports_1.4.1     Matrix_1.5-1        fastmap_1.1.0       cli_3.4.0          
-##  [37] htmltools_0.5.3     tools_4.2.1         gtable_0.3.1        glue_1.6.2         
-##  [41] Rcpp_1.0.9          carData_3.0-5       jquerylib_0.1.4     vctrs_0.4.1        
-##  [45] svglite_2.1.0       nlme_3.1-159        insight_0.18.4      xfun_0.33          
-##  [49] stringr_1.4.1       ps_1.7.1            lme4_1.1-30         rvest_1.0.3        
-##  [53] lifecycle_1.0.2     rstatix_0.7.0       DEoptimR_1.0-11     MASS_7.3-58.1      
-##  [57] scales_1.2.1        RColorBrewer_1.1-3  yaml_2.3.5          sass_0.4.2         
-##  [61] rpart_4.1.16        latticeExtra_0.6-30 stringi_1.7.8       highr_0.9          
-##  [65] bayestestR_0.13.0   checkmate_2.1.0     boot_1.3-28         rlang_1.0.5        
-##  [69] pkgconfig_2.0.3     systemfonts_1.0.4   evaluate_0.16       purrr_0.3.4        
-##  [73] htmlwidgets_1.5.4   labeling_0.4.2      tidyselect_1.1.2    processx_3.7.0     
-##  [77] magrittr_2.0.3      R6_2.5.1            magick_2.7.3        generics_0.1.3     
-##  [81] pillar_1.8.1        foreign_0.8-82      withr_2.5.0         mgcv_1.8-40        
-##  [85] datawizard_0.6.0    abind_1.4-5         nnet_7.3-17         tibble_3.1.8       
-##  [89] performance_0.9.2   modelr_0.1.9        car_3.1-0           interp_1.1-3       
-##  [93] utf8_1.2.2          rmarkdown_2.16      jpeg_0.1-9          data.table_1.14.2  
-##  [97] callr_3.7.2         digest_0.6.29       webshot_0.5.3       xtable_1.8-4       
-## [101] munsell_0.5.0       viridisLite_0.4.1   bslib_0.4.0</code></pre>
+##  [25] km.ci_0.5-6         broom_1.0.1         cluster_2.1.4       png_0.1-7          
+##  [29] effectsize_0.7.0.5  compiler_4.2.1      httr_1.4.4          sjstats_0.18.1     
+##  [33] emmeans_1.8.1-1     backports_1.4.1     Matrix_1.5-1        fastmap_1.1.0      
+##  [37] cli_3.4.0           htmltools_0.5.3     tools_4.2.1         gtable_0.3.1       
+##  [41] glue_1.6.2          Rcpp_1.0.9          carData_3.0-5       jquerylib_0.1.4    
+##  [45] vctrs_0.4.1         svglite_2.1.0       nlme_3.1-159        insight_0.18.4     
+##  [49] xfun_0.33           stringr_1.4.1       ps_1.7.1            lme4_1.1-30        
+##  [53] rvest_1.0.3         lifecycle_1.0.2     rstatix_0.7.0       DEoptimR_1.0-11    
+##  [57] zoo_1.8-11          MASS_7.3-58.1       scales_1.2.1        RColorBrewer_1.1-3 
+##  [61] yaml_2.3.5          KMsurv_0.1-5        sass_0.4.2          rpart_4.1.16       
+##  [65] latticeExtra_0.6-30 stringi_1.7.8       highr_0.9           bayestestR_0.13.0  
+##  [69] checkmate_2.1.0     boot_1.3-28         rlang_1.0.5         pkgconfig_2.0.3    
+##  [73] systemfonts_1.0.4   evaluate_0.16       purrr_0.3.4         htmlwidgets_1.5.4  
+##  [77] labeling_0.4.2      tidyselect_1.1.2    processx_3.7.0      magrittr_2.0.3     
+##  [81] R6_2.5.1            magick_2.7.3        generics_0.1.3      pillar_1.8.1       
+##  [85] foreign_0.8-82      withr_2.5.0         mgcv_1.8-40         datawizard_0.6.0   
+##  [89] abind_1.4-5         nnet_7.3-17         tibble_3.1.8        performance_0.9.2  
+##  [93] modelr_0.1.9        car_3.1-0           survMisc_0.5.6      interp_1.1-3       
+##  [97] utf8_1.2.2          rmarkdown_2.16      jpeg_0.1-9          data.table_1.14.2  
+## [101] callr_3.7.2         digest_0.6.29       webshot_0.5.3       xtable_1.8-4       
+## [105] munsell_0.5.0       viridisLite_0.4.1   bslib_0.4.0</code></pre>
 <hr />
 </div>
 </div>
