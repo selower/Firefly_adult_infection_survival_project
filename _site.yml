@@ -1,13 +1,11 @@
-name: "my-website"
+name: "P. pyralis adult survival infection data analysis"
 navbar:
-  title: "My Website"
+  title: "P. pyralis adult survival infection data analysis"
   left:
     - text: "Home"
       href: index.html
     - text: "About"
       href: about.html
-    - text: "Hello World"
-      href: Hello_world.html
     - text: "S1.EL_Mass_relationships"
       href: S1.EL_Mass_relationships_6_14_22.html
     - text: "S2.Exploring_linearity_condition"
