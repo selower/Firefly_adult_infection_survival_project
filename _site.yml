@@ -5,9 +5,11 @@ navbar:
   left:
     - text: "Home"
       href: index.html
-    - text: "About"
-      href: about.html
     - text: "S1.EL_Mass_relationships"
       href: S1.EL_Mass_relationships_6_14_22.html
     - text: "S2.Exploring_linearity_condition"
       href: S2.Exploring_linearity_condition_5_13_22.html
+output:
+  html_document:
+    theme: yeti
+    highlight: textmate
