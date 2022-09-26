@@ -1,0 +1,2283 @@
+---
+title: "P. pyralis adult infection survival: infection analysis"
+author: "Moria Chambers + Sarah Lower"
+date: "`r Sys.Date()`"
+editor_options: 
+  chunk_output_type: console
+output: 
+  html_document:
+    toc: TRUE
+    toc_float: TRUE
+    toc_depth: 6
+    theme: cerulean
+    code_folding: hide
+---
+
+# Goal: Test if infection by 5 different bacteria, each at 3 different doses, affect the survival of *P. pyralis* fireflies
+
+*Study design:*
+
+![](./Experimental_design.png)
+
+Abbreviations:
+
+  + Sm = *Serratia marcescens* DB1140
+  + Ps = *Providencia sneebia*
+  + Pr = *Providencia rettgeri*
+  + Pa = *Pseudomonas aeruginosa*
+  + Ef = *Enterrococcus faecalis*
+  
+---
+
+## Step 1: Ready the workspace
+```{r ready the workspace, message=FALSE, warning=FALSE}
+#clear all inputs
+rm(list = ls())
+
+#Check for necessary packages
+list.of.packages <- c("survival",
+                      "survminer",
+                      "ggplot2", 
+                      "tidyr",
+                      "dplyr",
+                      "Hmisc",
+                      "qqplotr",
+                      "ggthemes",
+                      "fabricatr",
+                      "gridExtra",
+                      "grid",
+                      "kableExtra",
+                      "sjPlot",
+                      "cowplot",
+                      "ggpubr",
+                      "patchwork",
+                      "magick", #so you can use the savekable function
+                      "webshot", #so you can use the savekable function
+                      "lme4",
+                      "RcppEigen",
+                      "SciViews",
+                      "coxme")
+
+#should install packages that you don't have
+new.packages <- list.of.packages[!(list.of.packages %in% installed.packages()[,"Package"])]
+if(length(new.packages)) install.packages(new.packages)
+
+#Load the package that contains the Cox Propotional Hazard Function
+library(survival)
+library(ggplot2)
+library(tidyr)
+library(dplyr)
+library(Hmisc)
+library(qqplotr)
+library(ggthemes)
+library(fabricatr)
+library(survminer)
+library(gridExtra)
+library(grid)
+library(kableExtra)
+library(sjPlot)
+library(cowplot)
+library(ggpubr)
+library(patchwork)
+library(SciViews)
+library(coxme)
+```
+
+---
+
+## Step 2: Import the data
+```{r import the data, results = 'hide'}
+#This imports the data from a CSV file
+Adult_Final<-read.table("2021_Adult_Firefly_Survival_binned3.csv", header=TRUE, sep=",", dec=".",na.strings=".") 
+
+#add Condition variables
+Adult_Final$Condition <- Adult_Final$Mass/Adult_Final$ElytralLength
+Adult_Final$LogCondition <- log(Adult_Final$Condition)
+
+# Add a numeric version of location variable for random effects moodels
+Adult_Final$Location2 <- as.numeric(factor(Adult_Final$Location))
+
+#This sets up the color palette using tableau20: https://jrnold.github.io/ggthemes/reference/tableau_color_pal.html
+site_colors <- c("USA: Montour Co, Bucknell Natural Area" = "#4E79A7",
+                 "USA: Union Co, Bucknell Farm" = "#F28E2B", 
+                 "USA: Union Co, Bucknell Ropes Course" = "#E15759")
+```
+
+---
+
+## Step 3: Individual Infections {.tabset .tabset-fade}
+
+*Note: All infections are examined relative to sterile saline injection (PBS) controls.*
+
+### *Serratia marcescens*
+
+#### Q1. Do **Sm** infected flies die more than controls and is mortality due to **Sm** impacted by **Condition** and **season day**?
+
+   + Subset based on dates that Sm was used, then only retained Sm infected flies and sterile saline control to serve as a baseline.
+      + Note: The subset has 256 fireflies
+   + Same order for these models as uninfected
+   + Initial analysis with **Treatment only** indicated that this factor had time-dependence using Schoenfeld Residuals (p = 0.0042). Based on plot of survival based on **Treatment**, we decided not to stratify as it was overall relatively flat.
+   
+  + **CONCLUSIONS**: 
+    + Based on the full model, as expected, covariates **Condition** and **Season Day** all have a significant impact on survival (p << 0.001). **Treatment** significantly impacted survival (p << 0.0001). Neither interaction term was significant.
+    + Model reduction using step-wise removal of factors based on their impact on the log likelihood of the model, resulted in a more streamlined model: 
+    
+      + Survival  ~ Condition + SeasonDay + Treatment + Condition:Treatment
+  
+    + As expected, covariates **Condition** and **Season Day** all have a significant impact on survival (p << 0.001). **Treatment** significantly impacted survival (p << 0.0001). While **Condition x Treatment** was was not significant (p = 0.055), it was retained in the model due to having a p-value close to 0.05. **Season Day** displayed borderline time-dependence based on Schoenfeld residuals (p = 0.047)
+    + Only **SeasonDay**, **Treatment_Sm_5.0** and **Condition:Treatment_Sm_5.0** had B-coefficients that were significantly different from zero (p = 0.0001, p = 0.001, and p = 0.02 respectively). For **SeasonDay** the HR = 1.044 (95% confidence interval: 1.025-1.064), meaning that the later in the season there is a higher risk of death. For **Treatments - Sm - 5.0** the HR = 40.10 (95% confidence interval 4.5-355.3) meaning that fireflies infected with this infectious dose had a higher risk of death. For **Condition:Treatment_Sm_5.0** and the B-coeff was negative (-726.6) indicating that being in good condition provided additional benefit for those fireflies. 
+
+```{r define Sm datasets}
+#subset the data to include only dates where Sm infection was administered
+Adult_Sm_date<-subset(Adult_Final, CollectionDate=="28-Jun"|CollectionDate=="29-Jun"|CollectionDate=="30-Jun"|CollectionDate=="6-Jul"|CollectionDate=="14-Jul"|CollectionDate=="27-Jul"|CollectionDate=="28-Jul"|CollectionDate=="2-Aug")
+
+#subset that data to only include PBS controls and Sm infected fireflies for coxph analysis
+Adult_Sm<-subset(Adult_Sm_date,BacterialSpecies=="02_PBS"|BacterialSpecies=="04_Smarc")
+```
+
+#### **Treatment only** analysis
+```{r Treatment only Analysis - Sm}
+
+modelSm_uni <- coxph(Surv(Days_post_infection, Status) ~ Treatment, data = Adult_Sm)
+summary(modelSm_uni)
+```
+
+  + ANOVA - **Treatment only** analysis
+```{r  Treatment only analysis - anova - Sm}
+#anova
+t <- anova(modelSm_uni)
+
+#set some formatting before using cable (num digits to display, bolding based on significance)
+t[,4] = round(t[,4], digits = 10)
+row.names(t) = cell_spec(row.names(t), bold = ifelse(t[,4] < 0.05, "TRUE", "FALSE"))
+t[,4] = cell_spec(t[,4], bold = ifelse(t[,4] < 0.05, "TRUE", "FALSE"))
+
+#make nice table with kable
+kbl(t, escape = FALSE, digits = c(2, 2, 2, 3)) %>%
+  kable_classic(full_width = F, html_font = "Cambria", position = "center")
+```
+
+  +  Checking model assumptions for Treatment (beta coef = flat)
+
+```{r Checking model assumptions - Treatment only analysis Sm}
+#check to see if there is time-dependence of treatment = yes! Need to stratify treatment. Split at d3 based on Chambers 2019.
+fitSm_uni <- cox.zph(modelSm_uni, transform="km", global=TRUE)
+print(fitSm_uni)
+plot(fitSm_uni)
+```
+
+  + Conclusion
+    + There is a time-dependence to treatment for *S. marcescens* infected fireflies
+    + However, overall it is still relatively flat and we decided to proceed with the multivariable analysis to see how it behaved once the co-variates were taken into account.
+      
+
+#### **multivariable** analysis
+ 
+  + Check whether *Location* should be included as a random effect.
+
+```{r multivariable analysis - location as random effect - Sm}
+#full model - Fixed effects only
+modelSm_full <- coxph(Surv(Days_post_infection, Status) ~ Condition + SeasonDay + Treatment+Condition:Treatment+SeasonDay:Treatment, data = Adult_Sm)
+
+# full model with random effect for location
+modelSm_full_random <- coxme(Surv(Days_post_infection, Status) ~ Condition + SeasonDay + Treatment+Condition:Treatment+SeasonDay:Treatment + + (1|Location2), data = Adult_Sm)
+
+# Check whether location as random effect improved model fit
+anova(modelSm_full_random, modelSm_full)
+```
+
+  + Conclusion
+    + Location as a random effect does not improve model fit. Not keeping it in future models.
+
+  + Summary - **multivariable** analysis
+```{r multivariable analysis - Sm}
+#full model - Fixed effects only
+summary(modelSm_full)
+```
+
+
+ + ANOVA - **multivariable** analysis
+```{r multivariable analysis - anova - Sm}
+t <- anova(modelSm_full) 
+
+rownames(t) <- c("NULL","Condition", "Season Day", "Treatment", "Condition:Treatment", "Season Day:Treatment")
+
+kbl(t) %>%
+    kable_classic(full_width = F, html_font = "Cambria", position = "center")
+```
+
+  + Checking model assumptions (beta coef = flat) - **multivariable** analysis
+```{r Checking assumptions - multivariable Sm, fig.height = 3, fid.width = 3.5}
+#Check to see how the model looks - does it fulfill assumptions
+fitSm_full<-cox.zph(modelSm_full, transform="km", global=TRUE)
+print(fitSm_full)
+plot(fitSm_full)
+```
+
+#### Reduced **multivariable** analysis
+ + Model reduction to allow calculation of more useful Hazard Ratios - **multivariable** analysis
+
+*Note: Full stepwise reduction not shown. Only the final reduced model is presented.*
+ + Summary - Reduced **multivariable** analysis
+```{r Reduced multivariable Model - Sm}
+
+#removal of Condition:Treatment to allow us to get more accurate HRs for specific situations (predictive modeling
+modelSm_redux <- coxph(Surv(Days_post_infection, Status) ~ Condition + SeasonDay + Treatment + Condition:Treatment, data = Adult_Sm)
+summary(modelSm_redux)
+```
+
+  + ANOVA - Reduced **multivariable** analysis
+```{r Reduced multivariable model - anova - Sm}
+#anova
+t <- anova(modelSm_redux)
+
+#set some formatting before using cable (num digits to display, bolding based on significance)
+t[,4] = round(t[,4], digits = 10)
+row.names(t) = cell_spec(row.names(t), bold = ifelse(t[,4] < 0.05, "TRUE", "FALSE"))
+t[,4] = cell_spec(t[,4], bold = ifelse(t[,4] < 0.05, "TRUE", "FALSE"))
+
+#make nice table with kable
+kbl(t, escape = FALSE, digits = c(2, 2, 2, 3)) %>%
+  kable_classic(full_width = F, html_font = "Cambria", position = "center")
+```  
+
+  + Checking model assumptions (beta coef = flat) - reduced **multivariable**
+```{r Reduced multivariable - assumptions - Sm, fig.height = 3, fid.width = 3.5}
+#Check to see how the model looks - does it fulfill assumptions
+fitSm_redux<-cox.zph(modelSm_redux, transform="km", global=TRUE)
+print(fitSm_redux)
+```
+
+ + Comparison of reduced multivariable model to full multivariable model
+
+```{r Does removal of non-significant interaction terms weaken the model - Sm}
+anova(modelSm_full, modelSm_redux) #does removing condition:treatment significantly weaken model? No.
+```
+
+  + CONCLUSION 
+    + Removal of non-significant terms does not weaken the model
+  
+ + Comparison of reduced **multivariable** model to **Treatment only** model
+```{r Does addition of the co-variates Condition and Season Day improve the model - Sm}
+anova(modelSm_redux,modelSm_uni) #Does including the covariates improve fit? Yes, including co-variates results in a significantly better model
+```
+
+ + CONCLUSION
+    + Addition of covariates significantly improves the model
+
+#### Individual factor plots
+
+##### **Treatment**
+  + Sample Size: 
+```{r Do Sm infected flies die more than controls - sample size}
+t <- data.frame(table(Adult_Sm$Treatment))
+t$Var1 <- c("PBS", "Sm Abs600nm 0.1", "Sm Abs600nm 1.0", "Sm Abs600nm 5.0")
+colnames(t) <- c("Treatment", "n")
+kbl(t) %>%
+    kable_classic(full_width = F, html_font = "Cambria", position = "center")
+```
+
+ + Plot - **Treatment**:
+```{r Do Sm infected flies die more than controls - plot}
+legend_size <- 1.4
+
+#png(file="pyralis_Smarc_DB1140.png",width=2972,height=1960, units = "px", res=400)
+par(mar=c(6,6,1,1)) #sets the margins around the graph so there is room for the labels
+plot(survfit(Surv(Days_post_infection,Status)~Treatment, data=Adult_Sm),
+     col=c( "black", "#D4A6C8","#B07AA1","#8B537B"),
+     lty=c(1, 1, 2, 3),
+     lwd=5, #line width
+     yaxt='n',
+     xaxt='n',
+     ylab="Proportion alive", #label for the y-axis
+     xlab="Days post-treatment", #label for the x-axis
+     cex.lab=2.5, #font size of axis labels
+     xlim=c(0,25), #determines range of the x-axis
+     xaxs='i') #makes the data flush with the axis
+axis(2, #left side
+     las=3, #perpendicular to the axis
+     cex.axis=2, #font size
+     lwd=5) #line width
+axis(1, #bottom of the graph
+     cex.axis=2, #font size
+     lwd=5) #line width
+box(lwd=5)
+
+legend("topright", bty="n" , c("Sterile saline (n=94)","0.1 Sm (n=35)","1.0 Sm (n=59)","5.0 Sm (n=68)"),col=c("black", "#D4A6C8","#B07AA1","#8B537B"), lty=c( 1, 1, 2, 3),lwd=5, cex=legend_size)
+
+#dev.off()
+```
+
+ + Alternative Plot - SeasonDay separate
+ 
+    + Sample size:
+```{r Sm SD x T table}
+#make SD categories
+Adult_Sm$SDcategory<- cut(Adult_Sm$SeasonDay, breaks = c(5, 18, Inf))
+
+#make SD by treatment variable
+Adult_Sm$SD_Treatment<-paste(Adult_Sm$SDcategory, Adult_Sm$Treatment, sep="_")
+
+#unique(Adult_Sm$SD_Treatment)
+
+Adult_Sm$SD_Treatment <- factor(Adult_Sm$SD_Treatment, levels=c("(5,18]_02_PBS ", "(5,18]_04_Sm_0.1 ", "(5,18]_04_Sm_1.0", "(5,18]_04_Sm_5.0", "(18,Inf]_02_PBS ", "(18,Inf]_04_Sm_0.1 ", "(18,Inf]_04_Sm_1.0", "(18,Inf]_04_Sm_5.0"))
+
+t <- data.frame(table(Adult_Sm$SD_Treatment))
+
+t$Var1 <- c("Early, PBS", "Early, 0.1 S. marcescens", "Early,  1.0 S. marcescens", "Early, 5.0 S. marcescens", "Late, PBS", "Late, 0.1 S. marcescens", "Late,  1.0 S. marcescens", "Late, 5.0 S. marcescens")
+
+colnames(t) <- c("Treatment", "n")
+
+kbl(t) %>%
+    kable_classic(full_width = F, html_font = "Cambria", position = "center")
+```
+
+    + Plot
+```{r alt Sm SD x Treatment plot, fig.align='center', fig.height=4, fig.width=6}
+interaction_legend_size = 1.4
+
+Adult_Sm_Early <- Adult_Sm[Adult_Sm$SDcategory == "(5,18]",]
+Adult_Sm_Late <- Adult_Sm[Adult_Sm$SDcategory == "(18,Inf]",]
+
+#early
+#png(file="Survival_Treatment_Sm_Early.png",width=2972,height=1960,units = "px", res=400)
+par(mar=c(6,6,1,1)) #sets the margins around the graph so there is room for the labels
+plot(survfit(Surv(Days_post_infection,Status)~Treatment, data=Adult_Sm_Early),
+     col= c("black", "#D4A6C8","#B07AA1","#8B537B"),
+     lty=rep(1, 4),
+     lwd=5, #line width
+     yaxt='n',
+     xaxt='n',
+     ylab="Proportion alive", #label for the y-axis
+     xlab="Days post-treatment", #label for the x-axis
+     cex.lab=2.5, #font size ofange of the x-axis
+     xlim=c(0,25),
+     xaxs='i') #makes the data flush with the axis
+axis(2, #left side
+     las=3, #perpendicular to the axis
+     cex.axis=2, #font size
+     lwd=5) #line width
+axis(1, #bottom of the graph
+     cex.axis=2, #font size
+     lwd=5) #line width
+box(lwd=5)
+
+legend("topright", bty="n" , c("Early, Sterile saline (n=40)", "Early, 0.1 Sm (n=30)", "Early, 1.0 Sm (n=35)", "Early, 5.0 Sm (n=32)"), col=c("black", "#D4A6C8","#B07AA1","#8B537B"), lty=rep(1, 4), lwd=5, cex=interaction_legend_size)
+
+#dev.off()
+
+#late
+#png(file="Survival_Treatment_Sm_Late.png",width=2972,height=1960,units = "px", res=400)
+par(mar=c(6,6,1,1)) #sets the margins around the graph so there is room for the labels
+plot(survfit(Surv(Days_post_infection,Status)~Treatment, data=Adult_Sm_Late),
+     col= c("black", "#D4A6C8","#B07AA1","#8B537B"),
+     lty=rep(1, 4),
+     lwd=5, #line width
+     yaxt='n',
+     xaxt='n',
+     ylab="Proportion alive", #label for the y-axis
+     xlab="Days post-treatment", #label for the x-axis
+     cex.lab=2.5, #font size ofange of the x-axis
+     xlim=c(0,25),
+     xaxs='i') #makes the data flush with the axis
+axis(2, #left side
+     las=3, #perpendicular to the axis
+     cex.axis=2, #font size
+     lwd=5) #line width
+axis(1, #bottom of the graph
+     cex.axis=2, #font size
+     lwd=5) #line width
+box(lwd=5)
+
+legend("topright", bty="n" , c("Late, Sterile saline (n=54)", "Late, 0.1 Sm (n=5)", "Late, 1.0 Sm (n=24)", "Late, 5.0 Sm (n=36)"), col=c("black", "#D4A6C8","#B07AA1","#8B537B"), lty=rep(1, 4), lwd=5, cex=interaction_legend_size)
+
+#dev.off()
+```
+
+
+#### Calculating Hazard ratios for different infected firefly classes
+ + Extract the coefficients and define the function to compare hazard ratios among two exemplar fireflies
+```{r Sm infection hazard rates}
+#what object -> reduced model
+#length(modelSm_redux$coefficients) #there are 11 coefficients
+condition_coef <- modelSm_redux$coefficients[1]
+seasonday_coef <- modelSm_redux$coefficients[2]
+Sm0.1_coef <- modelSm_redux$coefficients[3]
+Sm1.0_coef <- modelSm_redux$coefficients[4]
+Sm5.0_coef <- modelSm_redux$coefficients[5]
+Condition_Sm0.1_coef <- modelSm_redux$coefficients[6]
+Condition_Sm1.0_coef <- modelSm_redux$coefficients[7]
+Condition_Sm5.0_coef <- modelSm_redux$coefficients[8]
+
+calc_HR_Sm_infection <- function(avg_cond1, SD1, Sm0.1_cat1, Sm1.0_cat1, Sm5.0_cat1, avg_cond2, SD2, Sm0.1_cat2, Sm1.0_cat2, Sm5.0_cat2){
+  
+  H_for_firefly1 = exp(condition_coef*avg_cond1 + 
+                         seasonday_coef*SD1 + 
+                         Sm0.1_coef*Sm0.1_cat1 + 
+                         Sm1.0_coef*Sm1.0_cat1 + 
+                         Sm5.0_coef*Sm5.0_cat1 + 
+                         Condition_Sm0.1_coef*avg_cond1*Sm0.1_cat1 + 
+                         Condition_Sm1.0_coef*avg_cond1*Sm1.0_cat1 + 
+                         Condition_Sm5.0_coef*avg_cond1*Sm5.0_cat1)
+  H_for_firefly2 = exp(condition_coef*avg_cond2 + 
+                         seasonday_coef*SD2 + 
+                         Sm0.1_coef*Sm0.1_cat2 + 
+                         Sm1.0_coef*Sm1.0_cat2 + 
+                         Sm5.0_coef*Sm5.0_cat2 +
+                         Condition_Sm0.1_coef*avg_cond2*Sm0.1_cat2 + 
+                         Condition_Sm1.0_coef*avg_cond2*Sm1.0_cat2 + 
+                         Condition_Sm5.0_coef*avg_cond2*Sm5.0_cat2)
+  HR = H_for_firefly2/H_for_firefly1
+  names(HR) <- NULL
+  return(HR)
+}
+
+coef.mat <- matrix(modelSm_redux$coefficients, nc=1)
+vc.mat <- vcov(modelSm_redux)
+
+calc_HR_CI_Sm_infection <- function(avg_cond1, SD1, Sm0.1_cat1, Sm1.0_cat1, Sm5.0_cat1, avg_cond2, SD2, Sm0.1_cat2, Sm1.0_cat2, Sm5.0_cat2){
+  cov.diff <- matrix(c(avg_cond2 - avg_cond1,
+                       SD2 - SD1,
+                       Sm0.1_cat2 - Sm0.1_cat1,
+                       Sm1.0_cat2 - Sm1.0_cat1,
+                       Sm5.0_cat2 - Sm5.0_cat1,
+                       avg_cond2*Sm0.1_cat2 - avg_cond1*Sm0.1_cat1,
+                       avg_cond2*Sm1.0_cat2 - avg_cond1*Sm1.0_cat1,
+                       avg_cond2*Sm5.0_cat2 - avg_cond1*Sm5.0_cat1), nc=1)
+  
+  log.HR <- t(cov.diff)%*%coef.mat
+  HR <- exp(log.HR)
+  names(HR) <- NULL
+
+  se.log.HR <- sqrt(t(cov.diff)%*%vc.mat%*%cov.diff)
+  names(se.log.HR) <- NULL
+  
+  LCI.HR <- exp(log.HR - 1.96*se.log.HR)
+  UCI.HR <- exp(log.HR + 1.96*se.log.HR)
+  
+  return(cat(paste0("HR = ", round(HR, 4), 
+                    ",  95% CI = (", 
+                    round(LCI.HR,4), 
+                    ", ", 
+                    round(UCI.HR,4), 
+                    ")")
+             )
+         )
+}
+```
+
+  + Hazard for fireflies in Sm0.1 vs PBS (day 20)
+```{r HR Sm 0.1 day 10}
+calc_HR_Sm_infection(avg_cond1 = 0.0035, 
+                   SD1 = 20, 
+                   Sm0.1_cat1 = 0, 
+                   Sm1.0_cat1 = 0, 
+                   Sm5.0_cat1 = 0, 
+                   avg_cond2 = 0.0035, 
+                   SD2 = 20, 
+                   Sm0.1_cat2 = 1, #in the 0.1 infection category
+                   Sm1.0_cat2 = 0,
+                   Sm5.0_cat2 = 0)
+
+calc_HR_CI_Sm_infection(avg_cond1 = 0.0035, 
+                        SD1 = 20, 
+                        Sm0.1_cat1 = 0, 
+                        Sm1.0_cat1 = 0, 
+                        Sm5.0_cat1 = 0, 
+                        avg_cond2 = 0.0035, 
+                        SD2 = 20, 
+                        Sm0.1_cat2 = 1, #in the 0.1 infection category
+                        Sm1.0_cat2 = 0,
+                        Sm5.0_cat2 = 0)
+```
+
+
+  + Hazard for fireflies in Sm1.0 vs PBS (day 20)
+```{r HR Sm 1.0 day 20}
+calc_HR_Sm_infection(avg_cond1 = 0.0035, 
+                   SD1 = 20, 
+                   Sm0.1_cat1 = 0, 
+                   Sm1.0_cat1 = 0, 
+                   Sm5.0_cat1 = 0, 
+                   avg_cond2 = 0.0035, 
+                   SD2 = 20, 
+                   Sm0.1_cat2 = 0, 
+                   Sm1.0_cat2 = 1, #in the 1.0 infection category
+                   Sm5.0_cat2 = 0)
+
+calc_HR_CI_Sm_infection(avg_cond1 = 0.0035, 
+                        SD1 = 20, 
+                        Sm0.1_cat1 = 0, 
+                        Sm1.0_cat1 = 0, 
+                        Sm5.0_cat1 = 0, 
+                        avg_cond2 = 0.0035, 
+                        SD2 = 20, 
+                        Sm0.1_cat2 = 0, 
+                        Sm1.0_cat2 = 1, #in the 1.0 infection category
+                        Sm5.0_cat2 = 0)
+```
+
+ + Hazard for fireflies in Sm5.0 vs PBS (day 20)
+```{r HR Sm5.0 day 20}
+calc_HR_Sm_infection(avg_cond1 = 0.0035, 
+                   SD1 = 20, 
+                   Sm0.1_cat1 = 0, 
+                   Sm1.0_cat1 = 0, 
+                   Sm5.0_cat1 = 0, 
+                   avg_cond2 = 0.0035, 
+                   SD2 = 20, 
+                   Sm0.1_cat2 = 0, 
+                   Sm1.0_cat2 = 0, 
+                   Sm5.0_cat2 = 1)
+
+calc_HR_CI_Sm_infection(avg_cond1 = 0.0035, 
+                        SD1 = 20, 
+                        Sm0.1_cat1 = 0, 
+                        Sm1.0_cat1 = 0, 
+                        Sm5.0_cat1 = 0, 
+                        avg_cond2 = 0.0035, 
+                        SD2 = 20, 
+                        Sm0.1_cat2 = 0, 
+                        Sm1.0_cat2 = 0, 
+                        Sm5.0_cat2 = 1)
+```
+
+ + Treatment Hazard plot (for fireflies in avg condition at Day 20 in the season, relative to identical firefly injected with PBS)
+```{r}
+HR_tbl_Sm <- tibble(Category = c(1,2,3),
+                 Treatment = c("0.1 Sm", "1.0 Sm", "5.0 Sm"), 
+                 HR = c(0.77, 1.23, 3.15),
+                 LCI = c(0.49, 0.83, 2.09),
+                 HCI = c(1.22, 1.83, 4.76))
+
+#png(file="pyralis_Smarc_DB1140_HR.png",width=2972,height=1960, units = "px", res=400)
+par(mar=c(6,6,1,1)) #sets the margins around the graph so there is room for the labels
+boxplot(HR ~ Treatment, data = data.frame(HR_tbl_Sm), border=c("#D4A6C8","#B07AA1","#8B537B"), boxlwd = 8, yaxt='n',
+     xaxt='n',
+     ylab="Hazard Ratio", #label for the y-axis
+     xlab="Treatment", #label for the x-axis
+     cex.lab=2.5, #font size of axis labels
+     ylim=c(0,8),
+     xlim=c(0.5,3.5), #determines range of the x-axis
+     xaxs='i') #makes the data flush with the axis)
+arrows(x0=HR_tbl_Sm$Category, 
+       y0=HR_tbl_Sm$LCI, 
+       x1=HR_tbl_Sm$Category, 
+       y1=HR_tbl_Sm$HCI, 
+       code=3, 
+       col=c("#D4A6C8","#B07AA1","#8B537B"), 
+       lwd=5, 
+       angle = 90, 
+       length = 0.1, 
+       #lty = c(1,2,3),
+       )
+axis(2, #left side
+     las=3, #perpendicular to the axis
+     cex.axis=2, #font size
+     lwd=5) #line width
+axis(1, #bottom of the graph
+     cex.axis=2, #font size
+     lwd=5,
+     at=c(1,2,3),
+     labels = c("0.1 Sm", "1.0 Sm", "5.0 Sm")
+     ) #line width
+box(lwd=5)
+
+#dev.off()
+  
+```
+---
+
+### *Providencia rettgeri*
+
+#### Q1. Do **Pr** infected flies die more than controls and is mortality due to **Pr** impacted by **Condition** and **Season Day**?
+
+```{r define Pr datasets}
+#subset the data to include only dates where Pr infection was administered
+Adult_Pr_date<-subset(Adult_Final, CollectionDate=="10-Jul"|CollectionDate=="12-Jul"|CollectionDate=="14-Jul"|CollectionDate=="19-Jul"|CollectionDate=="2-Aug")
+
+#subset that data to only include PBS controls and Pr infected fireflies for coxph analysis
+Adult_Pr<-subset(Adult_Pr_date,BacterialSpecies=="02_PBS"|BacterialSpecies=="05_Prett")
+#nrow(Adult_Pr)
+```
+  
+  + Subset based on dates that Pr was used, then only retained Pr infected flies and sterile saline control to serve as a baseline.
+    + Note: Based on `r nrow(Adult_Pr)` fireflies
+  
+  + Initial analysis with **Treatment only** indicated that this factor does not have time-dependence and so proceeded with multi-variate analysis.
+  
+  + Same order of covariates for these models as uninfected
+  
+  + **CONCLUSION**: 
+    + Based on the full model, as expected, covariates **Condition** and **Season Day** all have a significant impact on survival (p << 0.001 and p = 0.016 respectively). **Treatment** significantly impacted survival (p = 0.0007). The only interaction term that is significant is **SeasonDay x Treatment** (p = 0.04).
+    
+    + Model reduction using step-wise removal of factors based on their impact on the log likelihood of the model, resulted in a more streamlined model: 
+  
+      + Survival  ~ Condition + SeasonDay + Treatment + SeasonDay:Treatment
+  
+#### **Treatment only** analysis
+ + Summary - **Treatment only** analysis
+```{r Treatment only Analysis Pr}
+
+modelPr_uni <- coxph(Surv(Days_post_infection, Status) ~ Treatment, data = Adult_Pr)
+summary(modelPr_uni)
+```
+ 
+  + ANOVA - **Treatment only** analysis
+```{r Treatment only model - anova - Pr}
+#anova
+t <- anova(modelPr_uni)
+
+#set some formatting before using cable (num digits to display, bolding based on significance)
+t[,4] = round(t[,4], digits = 10)
+row.names(t) = cell_spec(row.names(t), bold = ifelse(t[,4] < 0.05, "TRUE", "FALSE"))
+t[,4] = cell_spec(t[,4], bold = ifelse(t[,4] < 0.05, "TRUE", "FALSE"))
+
+#make nice table with kable
+kbl(t, escape = FALSE, digits = c(2, 2, 2, 3)) %>%
+  kable_classic(full_width = F, html_font = "Cambria", position = "center")
+```  
+
+  + Checking model assumptions (beta coef = flat)
+```{r Treatment only multivariable - assumptions - Pr, fig.height = 3, fid.width = 3.5}
+fitPr_uni<-cox.zph(modelPr_uni, transform="km", global=TRUE)
+print(fitPr_uni)
+```
+
+#### **multivariable** analysis
+
+  + Check whether *Location* should be included as a random effect
+
+```{r multivariable analysis - random effect for location - Pr}
+modelPr_full <- coxph(Surv(Days_post_infection, Status) ~ Condition + SeasonDay + Treatment + Condition:Treatment + SeasonDay:Treatment, data = Adult_Pr)
+
+modelPr_full_random <- coxme(Surv(Days_post_infection, Status) ~ Condition + SeasonDay + Treatment + Condition:Treatment + SeasonDay:Treatment + (1|Location2), data = Adult_Pr)
+
+anova(modelPr_full_random, modelPr_full)
+```
+
+  + Conclusion
+    + Location as a random effect does not improve model fit. Not keeping it in future models.
+
+
+  + Summary - **multivariable** analysis
+```{r multivariable analysis - Pr}
+summary(modelPr_full)
+```
+  
+  + ANOVA - **multivariable** analysis
+```{r multivariable analysis - anova - Pr}
+#anova
+t <- anova(modelPr_full)
+
+#set some formatting before using cable (num digits to display, bolding based on significance)
+t[,4] = round(t[,4], digits = 10)
+row.names(t) = cell_spec(row.names(t), bold = ifelse(t[,4] < 0.05, "TRUE", "FALSE"))
+t[,4] = cell_spec(t[,4], bold = ifelse(t[,4] < 0.05, "TRUE", "FALSE"))
+
+#make nice table with kable
+kbl(t, escape = FALSE, digits = c(2, 2, 2, 3)) %>%
+  kable_classic(full_width = F, html_font = "Cambria", position = "center")
+```  
+
+  + Checking model assumptions (beta coef = flat)
+```{r multivariable - assumptions - Pr, fig.height = 3, fid.width = 3.5}
+fitPr_full<-cox.zph(modelPr_full, transform="km", global=TRUE)
+print(fitPr_full)
+```
+
+#### Reduced **multivariable** analysis
+  + Summary - Reduced **multivariable** analysis
+  
+*Note: only the final reduced model is shown*
+```{r Redux multivariable analysis - Pr}
+modelPr_redux <- coxph(Surv(Days_post_infection, Status) ~ Condition + SeasonDay + Treatment + SeasonDay:Treatment, data = Adult_Pr)
+summary(modelPr_redux)
+```
+  
+  + ANOVA - Reduced **multivariable** analysis
+```{r Reduced multivariable analysis - anova - Pr}
+#anova
+t <- anova(modelPr_redux)
+
+#set some formatting before using cable (num digits to display, bolding based on significance)
+t[,4] = round(t[,4], digits = 10)
+row.names(t) = cell_spec(row.names(t), bold = ifelse(t[,4] < 0.05, "TRUE", "FALSE"))
+t[,4] = cell_spec(t[,4], bold = ifelse(t[,4] < 0.05, "TRUE", "FALSE"))
+
+#make nice table with kable
+kbl(t, escape = FALSE, digits = c(2, 2, 2, 3)) %>%
+  kable_classic(full_width = F, html_font = "Cambria", position = "center")
+```
+  
+  + Checking model assumptions (beta coef = flat)
+```{r Reduced multivariable - assumptions Pr, fig.height = 3, fid.width = 3.5}
+fitPr_redux<-cox.zph(modelPr_redux, transform="km", global=TRUE)
+print(fitPr_redux)
+```
+
+ + Comparison of reduced model to full model
+
+```{r Does removal of non-significant interaction terms weaken the model - Pr}
+anova(modelPr_full, modelPr_redux)
+```
+ 
+ + CONCLUSION
+  + Removal of non-significant terms does not weaken the model
+  
+ + Comparison of reduced model to Treatment only model
+```{r Does addition of the co-variates Condition and Season Day improve the model - Pr}
+anova(modelPr_redux,modelPr_uni)
+```
+ 
+ + CONCLUSION
+  + Addition of co-variates significantly improves the model
+
+#### Individual factor plots
+
+##### **Treatment**
+  + Sample Size: 
+```{r Do Pr infected flies die more than controls - sample size}
+t <- data.frame(table(Adult_Pr$Treatment))
+
+t$Var1 <- c("PBS", "Pr Abs600nm 0.1", "Pr Abs600nm 1.0", "Pr Abs600nm 5.0")
+colnames(t) <- c("Treatment", "n")
+
+kbl(t) %>%
+    kable_classic(full_width = F, html_font = "Cambria", position = "center")
+```
+
+ + Plot - **Treatment**:
+```{r Do Pr infected flies die more than controls - plot}
+
+#png(file="pyralis_Prett.png",width=2972,height=1960, units = "px", res=400)
+par(mar=c(6,6,1,1)) #sets the margins around the graph so there is room for the labels
+plot(survfit(Surv(Days_post_infection,Status)~Treatment, data=Adult_Pr),
+     col=c( "black", "#D4A6C8","#B07AA1","#8B537B"),
+     lty=c( 1, 1, 2, 3),
+     lwd=5, #line width
+     yaxt='n',
+     xaxt='n',
+     ylab="Proportion alive", #label for the y-axis
+     xlab="Days post-treatment", #label for the x-axis
+     cex.lab=2.5, #font size of axis labels
+     xlim=c(0,25), #determines range of the x-axis
+     xaxs='i') #makes the data flush with the axis
+axis(2, #left side
+     las=3, #perpendicular to the axis
+     cex.axis=2, #font size
+     lwd=5) #line width
+axis(1, #bottom of the graph
+     cex.axis=2, #font size
+     lwd=5) #line width
+box(lwd=5)
+
+legend("topright", bty="n" , c("Sterile saline (n=94)","0.1 Pr (n=35)","1.0 Pr (n=51)","5.0 Pr (n=34)"),col=c("black", "#D4A6C8","#B07AA1","#8B537B"), lty=c( 1, 1, 2, 3),lwd=5, cex=legend_size)
+
+#dev.off()
+```
+
+##### **SeasonDay:Treatment** interaction
+ 
+  + SeasonDay sorted into two groups - early (collections on July 9, 13, 15, 17 - Season Days 1-18), late (collections on July 22, 23, 30, 31, 36 - Season Days 19-36)
+  + Couldn't do three groups because last two collections were truncated due to RNA collection.
+
+  + Sample size:
+```{r Pr SD x T table}
+#make SD categories
+Adult_Pr$SDcategory<- cut(Adult_Pr$SeasonDay, breaks = c(5, 18, Inf))
+
+#make SD by treatment variable
+Adult_Pr$SD_Treatment<-paste(Adult_Pr$SDcategory, Adult_Pr$Treatment, sep="_")
+
+Adult_Pr$SD_Treatment <- factor(Adult_Pr$SD_Treatment, levels=c("(5,18]_02_PBS ", "(5,18]_05_Pr_0.1", "(5,18]_05_Pr_1.0", "(5,18]_05_Pr_5.0", "(18,Inf]_02_PBS ", "(18,Inf]_05_Pr_0.1", "(18,Inf]_05_Pr_1.0", "(18,Inf]_05_Pr_5.0"))
+
+t <- data.frame(table(Adult_Pr$SD_Treatment))
+
+t$Var1 <- c("Early, PBS", "Early, 0.1 P. rettgeri", "Early,  1.0 P. rettgeri", "Early, 5.0 P. rettgeri", "Late, PBS", "Late, 0.1 P. rettgeri", "Late,  1.0 P. rettgeri", "Late, 5.0 P. rettgeri")
+
+colnames(t) <- c("Treatment", "n")
+
+kbl(t) %>%
+    kable_classic(full_width = F, html_font = "Cambria", position = "center")
+```
+
+ + Plot
+```{r Pr SD x Treatment plot}
+interaction_legend_size <- 1.2
+
+#png(file="Fig.4.Survival_SD_Treatment_Pr.png",width=2972,height=1960,units = "px", res=400)
+par(mar=c(6,6,1,1)) #sets the margins around the graph so there is room for the labels
+plot(survfit(Surv(Days_post_infection,Status)~SD_Treatment, data=Adult_Pr),
+     col= rep(c("black", "#D4A6C8","#B07AA1","#8B537B"), 2),
+     lty=c(rep(1, 4), rep(3,4)),
+     lwd=5, #line width
+     yaxt='n',
+     xaxt='n',
+     ylab="Proportion alive", #label for the y-axis
+     xlab="Days post-infection", #label for the x-axis
+     cex.lab=2.5, #font size ofange of the x-axis
+     xaxs='i') #makes the data flush with the axis
+axis(2, #left side
+     las=3, #perpendicular to the axis
+     cex.axis=2, #font size
+     lwd=5) #line width
+axis(1, #bottom of the graph
+     cex.axis=2, #font size
+     lwd=5) #line width
+box(lwd=5)
+
+legend("topright", bty="n" , c("Early, Sterile saline (n=55)", "Early, 0.1 Pr (n=28)", "Early, 1.0 Pr (n=26)", "Early, 5.0 Pr (n=27)", "Late, Sterile saline (n=38)", "Late, 0.1 Pr (n=7)", "Late, 1.0 Pr (n=25)", "Late, 5.0 Pr (n=7)"), col=rep(c("black", "#D4A6C8","#B07AA1","#8B537B"), 2), lty=c(rep(1, 4), rep(3,4)), lwd=5, cex=interaction_legend_size)
+
+#dev.off()
+```
+
+ + Alternative Plot - SeasonDay separate
+```{r alt Pr SD x Treatment plot, fig.align='center', fig.height=4, fig.width=6}
+interaction_legend_size = 1.4
+Adult_Pr_Early <- Adult_Pr[Adult_Pr$SDcategory == "(5,18]",]
+Adult_Pr_Late <- Adult_Pr[Adult_Pr$SDcategory == "(18,Inf]",]
+
+#early
+#png(file="Survival_SD_Treatment_Pr_Early.png",width=2972,height=1960,units = "px", res=400)
+par(mar=c(6,6,1,1)) #sets the margins around the graph so there is room for the labels
+plot(survfit(Surv(Days_post_infection,Status)~SD_Treatment, data=Adult_Pr_Early),
+     col= c("black", "#D4A6C8","#B07AA1","#8B537B"),
+     lty=rep(1, 4),
+     lwd=5, #line width
+     yaxt='n',
+     xaxt='n',
+     ylab="Proportion alive", #label for the y-axis
+     xlab="Days post-treatment", #label for the x-axis
+     cex.lab=2.5, #font size ofange of the x-axis
+     xlim=c(0,25),
+     xaxs='i') #makes the data flush with the axis
+axis(2, #left side
+     las=3, #perpendicular to the axis
+     cex.axis=2, #font size
+     lwd=5) #line width
+axis(1, #bottom of the graph
+     cex.axis=2, #font size
+     lwd=5) #line width
+box(lwd=5)
+
+legend("topright", bty="n" , c("Early, Sterile saline (n=55)", "Early, 0.1 Pr (n=28)", "Early, 1.0 Pr (n=26)", "Early, 5.0 Pr (n=27)"), col=c("black", "#D4A6C8","#B07AA1","#8B537B"), lty=rep(1, 4), lwd=5, cex=interaction_legend_size)
+
+#dev.off()
+
+#late
+#png(file="Survival_SD_Treatment_Pr_Late_solid.png",width=2972,height=1960,units = "px", res=400)
+par(mar=c(6,6,1,1)) #sets the margins around the graph so there is room for the labels
+plot(survfit(Surv(Days_post_infection,Status)~SD_Treatment, data=Adult_Pr_Late),
+     col= c("black", "#D4A6C8","#B07AA1","#8B537B"),
+     lty=rep(1, 4),
+     lwd=5, #line width
+     yaxt='n',
+     xaxt='n',
+     ylab="Proportion alive", #label for the y-axis
+     xlab="Days post-treatment", #label for the x-axis
+     cex.lab=2.5, #font size ofange of the x-axis
+     xlim=c(0,25),
+     xaxs='i') #makes the data flush with the axis
+axis(2, #left side
+     las=3, #perpendicular to the axis
+     cex.axis=2, #font size
+     lwd=5) #line width
+axis(1, #bottom of the graph
+     cex.axis=2, #font size
+     lwd=5) #line width
+box(lwd=5)
+
+legend("topright", bty="n" , c("Late, Sterile saline (n=38)", "Late, 0.1 Pr (n=7)", "Late, 1.0 Pr (n=25)", "Late, 5.0 Pr (n=7)"), col=c("black", "#D4A6C8","#B07AA1","#8B537B"), lty=rep(1, 4), lwd=5, cex=interaction_legend_size)
+
+#dev.off()
+```
+
+#### Calculating Hazard rates for different infected firefly classes
+ + Extract the coefficients and define the function to compare hazard rates among two exemplar fireflies
+```{r Pr infection hazard rates}
+#what object -> reduced model
+#length(modelPr_redux$coefficients) #there are 8 coefficients
+condition_coef <- modelPr_redux$coefficients[1]
+seasonday_coef <- modelPr_redux$coefficients[2]
+Pr0.1_coef <- modelPr_redux$coefficients[3]
+Pr1.0_coef <- modelPr_redux$coefficients[4]
+Pr5.0_coef <- modelPr_redux$coefficients[5]
+SD_Pr0.1_coef <- modelPr_redux$coefficients[6]
+SD_Pr1.0_coef <- modelPr_redux$coefficients[7]
+SD_Pr5.0_coef <- modelPr_redux$coefficients[8]
+
+#calculating hazard ratios
+#THE INFECTED FIREFLY IS ALWAYS FIREFLY #2
+calc_HR_Pr_infection <- function(avg_cond1, SD1, Pr0.1_cat1, Pr1.0_cat1, Pr5.0_cat1, avg_cond2, SD2, Pr0.1_cat2, Pr1.0_cat2, Pr5.0_cat2){
+  
+  H_for_firefly1 = exp(condition_coef*avg_cond1 + 
+                         seasonday_coef*SD1 + 
+                         Pr0.1_coef*Pr0.1_cat1 + 
+                         Pr1.0_coef*Pr1.0_cat1 + 
+                         Pr5.0_coef*Pr5.0_cat1 + 
+                         SD_Pr0.1_coef*SD1*Pr0.1_cat1 + 
+                         SD_Pr1.0_coef*SD1*Pr1.0_cat1 + 
+                         SD_Pr5.0_coef*SD1*Pr5.0_cat1)
+  H_for_firefly2 = exp(condition_coef*avg_cond2 + 
+                         seasonday_coef*SD2 + 
+                         Pr0.1_coef*Pr0.1_cat2 + 
+                         Pr1.0_coef*Pr1.0_cat2 + 
+                         Pr5.0_coef*Pr5.0_cat2 + 
+                         SD_Pr0.1_coef*SD2*Pr0.1_cat2 + 
+                         SD_Pr1.0_coef*SD2*Pr1.0_cat2 + 
+                         SD_Pr5.0_coef*SD2*Pr5.0_cat2)
+  HR = H_for_firefly2/H_for_firefly1
+  names(HR) <- NULL
+  return(HR)
+}
+
+coef.mat <- matrix(modelPr_redux$coefficients, nc=1)
+vc.mat <- vcov(modelPr_redux)
+
+calc_HR_CI_Pr_infection <- function(avg_cond1, SD1, Pr0.1_cat1, Pr1.0_cat1, Pr5.0_cat1, avg_cond2, SD2, Pr0.1_cat2, Pr1.0_cat2, Pr5.0_cat2){
+  cov.diff <- matrix(c(avg_cond2 - avg_cond1,
+                       SD2 - SD1,
+                       Pr0.1_cat2 - Pr0.1_cat1,
+                       Pr1.0_cat2 - Pr1.0_cat1,
+                       Pr5.0_cat2 - Pr5.0_cat1,
+                       SD2*Pr0.1_cat2 - SD1*Pr0.1_cat1,
+                       SD2*Pr1.0_cat2 - SD1*Pr1.0_cat1,
+                       SD2*Pr5.0_cat2 - SD1*Pr5.0_cat1), nc=1)
+  
+  log.HR <- t(cov.diff)%*%coef.mat
+  HR <- exp(log.HR)
+  names(HR) <- NULL
+
+  se.log.HR <- sqrt(t(cov.diff)%*%vc.mat%*%cov.diff)
+  names(se.log.HR) <- NULL
+  
+  LCI.HR <- exp(log.HR - 1.96*se.log.HR)
+  UCI.HR <- exp(log.HR + 1.96*se.log.HR)
+  
+  return(cat(paste0("HR = ", round(HR, 4), 
+                    ",  95% CI = (", 
+                    round(LCI.HR,4), 
+                    ", ", 
+                    round(UCI.HR,4), 
+                    ")")
+             )
+         )
+}
+
+```
+
+  + Hazard for fireflies in Pr0.1 vs PBS (day 10)
+```{r HR Pr 0.1 day 10}
+calc_HR_Pr_infection(avg_cond1 = 0.0035, 
+                   SD1 = 10, 
+                   Pr0.1_cat1 = 0, 
+                   Pr1.0_cat1 = 0, 
+                   Pr5.0_cat1 = 0, 
+                   avg_cond2 = 0.0035, 
+                   SD2 = 10, 
+                   Pr0.1_cat2 = 1, #in the 0.1 infection category
+                   Pr1.0_cat2 = 0,
+                   Pr5.0_cat2 = 0)
+
+calc_HR_CI_Pr_infection(avg_cond1 = 0.0035, 
+                        SD1 = 10, 
+                        Pr0.1_cat1 = 0, 
+                        Pr1.0_cat1 = 0, 
+                        Pr5.0_cat1 = 0, 
+                        avg_cond2 = 0.0035, 
+                        SD2 = 10, 
+                        Pr0.1_cat2 = 1, #in the 0.1 infection category
+                        Pr1.0_cat2 = 0,
+                        Pr5.0_cat2 = 0)
+```
+
+  + Hazard for fireflies in Pr0.1 vs PBS (day 20)
+```{r HR Pr 0.1 day 20}
+calc_HR_Pr_infection(avg_cond1 = 0.0035, 
+                   SD1 = 20, 
+                   Pr0.1_cat1 = 0, 
+                   Pr1.0_cat1 = 0, 
+                   Pr5.0_cat1 = 0, 
+                   avg_cond2 = 0.0035, 
+                   SD2 = 20, 
+                   Pr0.1_cat2 = 1, #in the 0.1 infection category
+                   Pr1.0_cat2 = 0,
+                   Pr5.0_cat2 = 0)
+
+calc_HR_CI_Pr_infection(avg_cond1 = 0.0035, 
+                        SD1 = 20, 
+                        Pr0.1_cat1 = 0, 
+                        Pr1.0_cat1 = 0, 
+                        Pr5.0_cat1 = 0, 
+                        avg_cond2 = 0.0035, 
+                        SD2 = 20, 
+                        Pr0.1_cat2 = 1, #in the 0.1 infection category
+                        Pr1.0_cat2 = 0,
+                        Pr5.0_cat2 = 0)
+```
+
+  + Hazard for fireflies in Pr0.1 vs PBS (day 30)
+```{r HR Pr 0.1 day 30}
+calc_HR_Pr_infection(avg_cond1 = 0.0035, 
+                   SD1 = 30, 
+                   Pr0.1_cat1 = 0, 
+                   Pr1.0_cat1 = 0, 
+                   Pr5.0_cat1 = 0, 
+                   avg_cond2 = 0.0035, 
+                   SD2 = 30, 
+                   Pr0.1_cat2 = 1, #in the 0.1 infection category
+                   Pr1.0_cat2 = 0,
+                   Pr5.0_cat2 = 0)
+
+calc_HR_CI_Pr_infection(avg_cond1 = 0.0035, 
+                        SD1 = 30, 
+                        Pr0.1_cat1 = 0, 
+                        Pr1.0_cat1 = 0, 
+                        Pr5.0_cat1 = 0, 
+                        avg_cond2 = 0.0035, 
+                        SD2 = 30, 
+                        Pr0.1_cat2 = 1, #in the 0.1 infection category
+                        Pr1.0_cat2 = 0,
+                        Pr5.0_cat2 = 0)
+```
+ 
+   + Hazard for fireflies in Pr1.0 vs PBS (day 10)
+```{r HR Pr 1.0 day 10}
+calc_HR_Pr_infection(avg_cond1 = 0.0035, 
+                   SD1 = 10, 
+                   Pr0.1_cat1 = 0, 
+                   Pr1.0_cat1 = 0, 
+                   Pr5.0_cat1 = 0, 
+                   avg_cond2 = 0.0035, 
+                   SD2 = 10, 
+                   Pr0.1_cat2 = 0, 
+                   Pr1.0_cat2 = 1, #in the 1.0 infection category
+                   Pr5.0_cat2 = 0) 
+
+calc_HR_CI_Pr_infection(avg_cond1 = 0.0035, 
+                        SD1 = 10, 
+                        Pr0.1_cat1 = 0, 
+                        Pr1.0_cat1 = 0, 
+                        Pr5.0_cat1 = 0, 
+                        avg_cond2 = 0.0035, 
+                        SD2 = 10, 
+                        Pr0.1_cat2 = 0, 
+                        Pr1.0_cat2 = 1, #in the 1.0 infection category
+                        Pr5.0_cat2 = 0) 
+```
+
+ + Hazard for fireflies in Pr1.0 vs PBS (day 20)
+```{r HR Pr 1.0 day 18}
+calc_HR_Pr_infection(avg_cond1 = 0.0035, 
+                   SD1 = 20, 
+                   Pr0.1_cat1 = 0, 
+                   Pr1.0_cat1 = 0, 
+                   Pr5.0_cat1 = 0, 
+                   avg_cond2 = 0.0035, 
+                   SD2 = 20, 
+                   Pr0.1_cat2 = 0,
+                   Pr1.0_cat2 = 1,  #in the 1.0 infection category
+                   Pr5.0_cat2 = 0)
+
+calc_HR_CI_Pr_infection(avg_cond1 = 0.0035, 
+                        SD1 = 20, 
+                        Pr0.1_cat1 = 0, 
+                        Pr1.0_cat1 = 0, 
+                        Pr5.0_cat1 = 0, 
+                        avg_cond2 = 0.0035, 
+                        SD2 = 20, 
+                        Pr0.1_cat2 = 0,
+                        Pr1.0_cat2 = 1,  #in the 1.0 infection category
+                        Pr5.0_cat2 = 0)
+```
+
+   + Hazard for fireflies in Pr1.0 vs PBS (day 30)
+```{r HR Pr 1.0 day 30}
+calc_HR_Pr_infection(avg_cond1 = 0.0035, 
+                   SD1 = 30, 
+                   Pr0.1_cat1 = 0, 
+                   Pr1.0_cat1 = 0, 
+                   Pr5.0_cat1 = 0, 
+                   avg_cond2 = 0.0035, 
+                   SD2 = 30, 
+                   Pr0.1_cat2 = 0, 
+                   Pr1.0_cat2 = 1, #in the 1.0 infection category
+                   Pr5.0_cat2 = 0)
+
+calc_HR_CI_Pr_infection(avg_cond1 = 0.0035, 
+                        SD1 = 30, 
+                        Pr0.1_cat1 = 0, 
+                        Pr1.0_cat1 = 0, 
+                        Pr5.0_cat1 = 0, 
+                        avg_cond2 = 0.0035, 
+                        SD2 = 30, 
+                        Pr0.1_cat2 = 0, 
+                        Pr1.0_cat2 = 1, #in the 1.0 infection category
+                        Pr5.0_cat2 = 0)
+```
+
+   + Hazard for fireflies in Pr5.0 vs PBS (day 10)
+```{r HR Pr 5.0 day 10}
+calc_HR_Pr_infection(avg_cond1 = 0.0035, 
+                   SD1 = 10, 
+                   Pr0.1_cat1 = 0, 
+                   Pr1.0_cat1 = 0, 
+                   Pr5.0_cat1 = 0, 
+                   avg_cond2 = 0.0035, 
+                   SD2 = 10, 
+                   Pr0.1_cat2 = 0, 
+                   Pr1.0_cat2 = 0,
+                   Pr5.0_cat2 = 1) #in the 5.0 infection category
+
+calc_HR_CI_Pr_infection(avg_cond1 = 0.0035, 
+                        SD1 = 10, 
+                        Pr0.1_cat1 = 0, 
+                        Pr1.0_cat1 = 0, 
+                        Pr5.0_cat1 = 0, 
+                        avg_cond2 = 0.0035, 
+                        SD2 = 10, 
+                        Pr0.1_cat2 = 0, 
+                        Pr1.0_cat2 = 0,
+                        Pr5.0_cat2 = 1) #in the 5.0 infection category
+```
+
+   + Hazard for fireflies in Pr5.0 vs PBS (day 20)
+```{r HR Pr 5.0 day 20}
+calc_HR_Pr_infection(avg_cond1 = 0.01, 
+                   SD1 = 20, 
+                   Pr0.1_cat1 = 0, 
+                   Pr1.0_cat1 = 0, 
+                   Pr5.0_cat1 = 0, 
+                   avg_cond2 = 0.01, 
+                   SD2 = 20, 
+                   Pr0.1_cat2 = 0, 
+                   Pr1.0_cat2 = 0,
+                   Pr5.0_cat2 = 1) #in the 5.0 infection category
+
+calc_HR_CI_Pr_infection(avg_cond1 = 0.01, 
+                        SD1 = 20, 
+                        Pr0.1_cat1 = 0, 
+                        Pr1.0_cat1 = 0, 
+                        Pr5.0_cat1 = 0, 
+                        avg_cond2 = 0.01, 
+                        SD2 = 20, 
+                        Pr0.1_cat2 = 0, 
+                        Pr1.0_cat2 = 0,
+                        Pr5.0_cat2 = 1) #in the 5.0 infection category
+```
+
+   + Hazard for fireflies in Pr5.0 vs PBS (day 30)
+```{r HR Pr 5.0 day 30}
+calc_HR_Pr_infection(avg_cond1 = 0.0035, 
+                   SD1 = 30, 
+                   Pr0.1_cat1 = 0, 
+                   Pr1.0_cat1 = 0, 
+                   Pr5.0_cat1 = 0, 
+                   avg_cond2 = 0.0035, 
+                   SD2 = 30, 
+                   Pr0.1_cat2 = 0, 
+                   Pr1.0_cat2 = 0,
+                   Pr5.0_cat2 = 1) #in the 5.0 infection category
+
+calc_HR_CI_Pr_infection(avg_cond1 = 0.0035, 
+                        SD1 = 30, 
+                        Pr0.1_cat1 = 0, 
+                        Pr1.0_cat1 = 0, 
+                        Pr5.0_cat1 = 0, 
+                        avg_cond2 = 0.0035, 
+                        SD2 = 30, 
+                        Pr0.1_cat2 = 0, 
+                        Pr1.0_cat2 = 0,
+                        Pr5.0_cat2 = 1) #in the 5.0 infection category
+```
+
+ + Treatment Hazard plot (for fireflies in avg condition at Day 20 in the season, relative to identical firefly injected with PBS)
+```{r}
+#calc_HR_CI_Pr_infection(avg_cond1 = 0.0035, 
+#                        SD1 = 20, 
+#                        Pr0.1_cat1 = 0, 
+#                        Pr1.0_cat1 = 0, 
+#                        Pr5.0_cat1 = 0, 
+#                        avg_cond2 = 0.0035, 
+#                        SD2 = 20, 
+#                        Pr0.1_cat2 = 1, #in the 0.1 infection category
+#                        Pr1.0_cat2 = 0,
+#                        Pr5.0_cat2 = 0)
+#calc_HR_CI_Pr_infection(avg_cond1 = 0.0035, 
+#                        SD1 = 20, 
+#                        Pr0.1_cat1 = 0, 
+#                        Pr1.0_cat1 = 0, 
+#                        Pr5.0_cat1 = 0, 
+#                        avg_cond2 = 0.0035, 
+#                        SD2 = 20, 
+#                        Pr0.1_cat2 = 0, 
+#                        Pr1.0_cat2 = 1, #in the 1.0 infection category
+#                        Pr5.0_cat2 = 0)
+#calc_HR_CI_Pr_infection(avg_cond1 = 0.0035, 
+#                        SD1 = 20, 
+#                        Pr0.1_cat1 = 0, 
+#                        Pr1.0_cat1 = 0, 
+#                        Pr5.0_cat1 = 0, 
+#                        avg_cond2 = 0.0035, 
+#                        SD2 = 20, 
+#                        Pr0.1_cat2 = 0, 
+#                        Pr1.0_cat2 = 0,
+#                        Pr5.0_cat2 = 1) #in the 5.0 infection category
+
+HR_tbl_Pr <- tibble(Category = c(1,2,3),
+                 Treatment = c("0.1 Pr", "1.0 Pr", "5.0 Pr"), 
+                 HR = c(0.86, 1.62, 4.17),
+                 LCI = c(0.48, 1.06, 2.36),
+                 HCI = c(1.52, 2.47, 7.35))
+
+#png(file="pyralis_Prett_HR.png",width=2972,height=1960, units = "px", res=400)
+par(mar=c(6,6,1,1)) #sets the margins around the graph so there is room for the labels
+boxplot(HR ~ Treatment, data = data.frame(HR_tbl_Pr), border=c("#D4A6C8","#B07AA1","#8B537B"), boxlwd = 8, yaxt='n',
+     xaxt='n',
+     ylab="Hazard Ratio", #label for the y-axis
+     xlab="Treatment", #label for the x-axis
+     cex.lab=2.5, #font size of axis labels
+     ylim=c(0,8),
+     xlim=c(0.5,3.5), #determines range of the x-axis
+     xaxs='i') #makes the data flush with the axis)
+arrows(x0=HR_tbl_Pr$Category, 
+       y0=HR_tbl_Pr$LCI, 
+       x1=HR_tbl_Pr$Category, 
+       y1=HR_tbl_Pr$HCI, 
+       code=3, 
+       col=c("#D4A6C8","#B07AA1","#8B537B"), 
+       lwd=5, 
+       angle = 90, 
+       length = 0.1, 
+       #lty = c(1,2,3),
+       )
+axis(2, #left side
+     las=3, #perpendicular to the axis
+     cex.axis=2, #font size
+     lwd=5) #line width
+axis(1, #bottom of the graph
+     cex.axis=2, #font size
+     lwd=5,
+     at=c(1,2,3),
+     labels = c("0.1 Pr", "1.0 Pr", "5.0 Pr")
+     ) #line width
+box(lwd=5)
+
+#dev.off()
+  
+```
+
+ + Plotting hazard across season day for Pr infection - reduced multivariable
+```{r predict HR for Pr x SD}
+test.dat <- data.frame(Condition = rep(median(Adult_Final$Condition), 4*28), 
+                       SeasonDay = rep(seq(9,36, 1), 4), 
+                       Treatment = c(rep("02_PBS ", 28), rep("05_Pr_0.1", 28), rep("05_Pr_1.0", 28), rep("05_Pr_5.0", 28)))
+
+Pr_predictions <- predict(modelPr_redux, test.dat, se.fit = TRUE, type = "risk")
+
+test.dat$pred_risk <- Pr_predictions$fit
+
+test.dat$pred_se <- Pr_predictions$se.fit
+
+```
+
+ + Plot - Hazard rate over the season +/- 95% CI:
+```{r Pr interaction - plot}
+#png(file="pyralis_Prett_SDxT_HR_06_28_22.png",width=2972,height=1960, units = "px", res=400)
+par(mar=c(6,6,1,1)) #sets the margins around the graph so there is room for the labels
+plot(test.dat$SeasonDay, test.dat$pred_risk, type = "n",
+     yaxt='n',
+     xaxt='n',
+     ylab="Hazard rate", #label for the y-axis
+     xlab="Season day", #label for the x-axis
+     cex.lab=2.5, #font size of axis labels
+     xlim=c(9,36), #determines range of the x-axis
+     xaxs='i') #makes the data flush with the axis
+
+
+# add fill for PBS
+polygon(c(rev(test.dat$SeasonDay[which(test.dat$Treatment == "02_PBS ")]), test.dat$SeasonDay[which(test.dat$Treatment == "02_PBS ")]), 
+        c(rev(test.dat$pred_risk[which(test.dat$Treatment == "02_PBS ")] + 1.96*test.dat$pred_se[which(test.dat$Treatment == "02_PBS ")]), test.dat$pred_risk[which(test.dat$Treatment == "02_PBS ")] - 1.96*test.dat$pred_se[which(test.dat$Treatment == "02_PBS ")]), col = adjustcolor("black",alpha.f=0.7), border = "black")
+
+#add line for PBS
+lines(test.dat$SeasonDay[which(test.dat$Treatment == "02_PBS ")],
+      test.dat$pred_risk[which(test.dat$Treatment == "02_PBS ")], 
+      col = "black", lty = 1, lwd = 1.2)
+
+# add fill for 0.1
+polygon(c(rev(test.dat$SeasonDay[which(test.dat$Treatment == "05_Pr_0.1")]), test.dat$SeasonDay[which(test.dat$Treatment == "05_Pr_0.1")]), 
+        c(rev(test.dat$pred_risk[which(test.dat$Treatment == "05_Pr_0.1")] + 1.96*test.dat$pred_se[which(test.dat$Treatment == "05_Pr_0.1")]), test.dat$pred_risk[which(test.dat$Treatment == "05_Pr_0.1")] - 1.96*test.dat$pred_se[which(test.dat$Treatment == "05_Pr_0.1")]), col = adjustcolor("#D4A6C8",alpha.f=0.7), border = "#D4A6C8", density = 20)
+
+#add line for 0.1
+lines(test.dat$SeasonDay[which(test.dat$Treatment == "05_Pr_0.1")],
+      test.dat$pred_risk[which(test.dat$Treatment == "05_Pr_0.1")], 
+      col = "#D4A6C8", lty = 1, lwd = 1.2)
+
+# add fill for 1.0
+polygon(c(rev(test.dat$SeasonDay[which(test.dat$Treatment == "05_Pr_1.0")]), test.dat$SeasonDay[which(test.dat$Treatment == "05_Pr_1.0")]), 
+        c(rev(test.dat$pred_risk[which(test.dat$Treatment == "05_Pr_1.0")] + 1.96*test.dat$pred_se[which(test.dat$Treatment == "05_Pr_1.0")]), test.dat$pred_risk[which(test.dat$Treatment == "05_Pr_1.0")] - 1.96*test.dat$pred_se[which(test.dat$Treatment == "05_Pr_1.0")]), col = adjustcolor("#B07AA1",alpha.f=0.7), border = "#B07AA1", density = 50)
+
+#add line for 1.0
+lines(test.dat$SeasonDay[which(test.dat$Treatment == "05_Pr_1.0")],
+      test.dat$pred_risk[which(test.dat$Treatment == "05_Pr_1.0")], 
+      col = "#B07AA1", lty = 1, lwd = 1.2)
+
+# add fill for 5.0
+polygon(c(rev(test.dat$SeasonDay[which(test.dat$Treatment == "05_Pr_5.0")]), test.dat$SeasonDay[which(test.dat$Treatment == "05_Pr_5.0")]), 
+        c(rev(test.dat$pred_risk[which(test.dat$Treatment == "05_Pr_5.0")] + 1.96*test.dat$pred_se[which(test.dat$Treatment == "05_Pr_5.0")]), test.dat$pred_risk[which(test.dat$Treatment == "05_Pr_5.0")] - 1.96*test.dat$pred_se[which(test.dat$Treatment == "05_Pr_5.0")]), col = adjustcolor("#8B537B",alpha.f=0.7), border = "#8B537B")
+
+#add line for 5.0
+lines(test.dat$SeasonDay[which(test.dat$Treatment == "05_Pr_5.0")],
+      test.dat$pred_risk[which(test.dat$Treatment == "05_Pr_5.0")], 
+      col = "#8B537B", lty = 1, lwd = 1.2)
+
+axis(2, #left side
+     las=3, #perpendicular to the axis
+     cex.axis=2, #font size
+     lwd=5) #line width
+axis(1, #bottom of the graph
+     cex.axis=2, #font size
+     lwd=5) #line width
+box(lwd=5)
+
+legend("topleft", bty="n" , c("Sterile saline","0.1 Pr","1.0 Pr","5.0 Pr"),fill=c("black", "#D4A6C8","#B07AA1","#8B537B"), density=c(NA, 20, 50, NA), cex=interaction_legend_size)
+
+
+#dev.off()
+```
+
+
+---
+
+### *Providencia sneebia*
+#### Q1. Do **Ps** infected flies die more than controls and is mortality due to **Ps** impacted by **Condition** and **Season Day**?
+
+```{r define Ps datasets}
+#subset the data to include only dates where Ps infection was administered
+Adult_Ps_date<- subset(Adult_Final, CollectionDate=="10-Jul"|CollectionDate=="12-Jul"|CollectionDate=="14-Jul"|CollectionDate=="19-Jul"|CollectionDate=="20-Jul")
+
+#subset that data to only include PBS controls and Ps infected fireflies for coxph analysis
+Adult_Ps<-subset(Adult_Ps_date,BacterialSpecies=="02_PBS"|BacterialSpecies=="06_Psneeb")
+```
+
+  + Subset based on dates that Ps was used, then only retained Ps infected flies and sterile saline control to serve as a baseline.
+    + Note: Based on `r nrow(Adult_Ps)` fireflies
+  + Initial analysis with **Treatment only** indicated that this factor does not have time-dependence and so proceeded with multi-variate analysis.
+  + In multivariable analysis, same order of covariates for these models as uninfected
+  
+  + **CONCLUSION**
+    + As expected, covariates **Condition** and **Season Day** all have a significant impact on survival(p << 0.001, p = 0.03, respectively). 
+    + **Treatment** did NOT significantly impact survival (p = 0.55). 
+    + No interactions were significant. 
+    + Cannot reject null in residual analysis (no time-dependence).
+    + In model reduction, removing both interaction terms and **Treatment** did not significantly weaken the model (p = 0.83), further supporting that treatment with these doses of *P. sneebia* did not affect mortality.
+  
+#### **Treatment only** analysis
+  + Summary - **Treatment only** analysis
+```{r Treatment only Analysis Ps}
+
+modelPs_uni <- coxph(Surv(Days_post_infection, Status) ~ Treatment, data = Adult_Ps)
+summary(modelPs_uni)
+```
+ 
+  + ANOVA - **Treatment only** analysis
+```{r Treatment only model Ps - anova}
+#anova
+t <- anova(modelPs_uni)
+
+#set some formatting before using cable (num digits to display, bolding based on significance)
+t[,4] = round(t[,4], digits = 10)
+row.names(t) = cell_spec(row.names(t), bold = ifelse(t[,4] < 0.05, "TRUE", "FALSE"))
+t[,4] = cell_spec(t[,4], bold = ifelse(t[,4] < 0.05, "TRUE", "FALSE"))
+
+#make nice table with kable
+kbl(t, escape = FALSE, digits = c(2, 2, 2, 3)) %>%
+  kable_classic(full_width = F, html_font = "Cambria", position = "center")
+```  
+
+  + Checking model assumptions (beta coef = flat)
+```{r Treatment only multivariable - assumptions - Ps, fig.height = 3, fid.width = 3.5}
+fitPs_uni<-cox.zph(modelPs_uni, transform="km", global=TRUE)
+print(fitPs_uni)
+```
+
+#### **multivariable** analysis
+
+  + Check whether *Location* should be included as a random effect.
+  
+```{r Mutlivariate analysis - location as random effect - Ps}
+modelPs_full <- coxph(Surv(Days_post_infection, Status) ~ Condition + SeasonDay + Treatment + Condition:Treatment + SeasonDay:Treatment, data = Adult_Ps)
+
+modelPs_full_random <- coxme(Surv(Days_post_infection, Status) ~ Condition + SeasonDay + Treatment + Condition:Treatment + SeasonDay:Treatment+ (1|Location2), data = Adult_Ps)
+
+anova(modelPs_full_random, modelPs_full)
+```
+
+  + Conclusion
+    + Location as a random effect does not improve model fit. Not keeping it in future models.
+
+  + Summary - **multivariable** Analysis
+```{r Mutlivariate analysis - Ps}
+summary(modelPs_full)
+```
+  
+  + ANOVA - multivariable analysis
+```{r multivariable analysis - anova - Ps}
+#anova
+t <- anova(modelPs_full)
+
+#set some formatting before using cable (num digits to display, bolding based on significance)
+t[,4] = round(t[,4], digits = 10)
+row.names(t) = cell_spec(row.names(t), bold = ifelse(t[,4] < 0.05, "TRUE", "FALSE"))
+t[,4] = cell_spec(t[,4], bold = ifelse(t[,4] < 0.05, "TRUE", "FALSE"))
+
+#make nice table with kable
+kbl(t, escape = FALSE, digits = c(2, 2, 2, 3)) %>%
+  kable_classic(full_width = F, html_font = "Cambria", position = "center")
+```  
+
+  + Checking model assumptions (beta coef = flat)
+```{r multivariable - assumptions - Ps, fig.height = 3, fid.width = 3.5}
+fitPs_full<-cox.zph(modelPs_full, transform="km", global=TRUE)
+print(fitPs_full)
+```
+
+#### Reduced **multivariable** Analysis
+  + Summary - Reduced **multivariable** Analysis
+```{r Redux multivariable analysis - Ps}
+modelPs_redux <- coxph(Surv(Days_post_infection, Status) ~ Condition + SeasonDay, data = Adult_Ps)
+summary(modelPs_redux)
+```
+  
+  + ANOVA - Reduced **multivariable** analysis
+```{r Reduced multivariable analysis - anova - Ps}
+#anova
+t <- anova(modelPs_redux)
+
+#set some formatting before using cable (num digits to display, bolding based on significance)
+t[,4] = round(t[,4], digits = 10)
+row.names(t) = cell_spec(row.names(t), bold = ifelse(t[,4] < 0.05, "TRUE", "FALSE"))
+t[,4] = cell_spec(t[,4], bold = ifelse(t[,4] < 0.05, "TRUE", "FALSE"))
+
+#make nice table with kable
+kbl(t, escape = FALSE, digits = c(2, 2, 2, 3)) %>%
+  kable_classic(full_width = F, html_font = "Cambria", position = "center")
+```
+  
+  + Checking model assumptions (beta coef = flat)
+```{r Reduced multivariable - assumptions Ps, fig.height = 3, fid.width = 3.5}
+fitPs_redux<-cox.zph(modelPs_redux, transform="km", global=TRUE)
+print(fitPs_redux)
+```
+
+ + Comparison of reduced model to full model
+```{r Does removal of non-significant interaction terms weaken the model - Ps}
+anova(modelPs_full, modelPs_redux)
+```
+ + CONCLUSION
+    + Removal of non-significant terms does not weaken the model
+
+ + Comparison of reduced model to Treatment only model
+```{r Does addition of the co-variates Condition and Season Day improve the model - Ps}
+anova(modelPs_redux,modelPs_uni)
+```
+ + CONCLUSION
+    + Addition of covariates significantly improves the model
+
+#### Individual factor plots
+
+##### **Treatment**
+  + Sample Size: 
+```{r Do Ps infected flies die more than controls - sample size}
+t <- data.frame(table(Adult_Ps$Treatment))
+t$Var1 <- c("PBS", "Ps Abs600nm 0.1", "Ps Abs600nm 1.0", "Ps Abs600nm 5.0")
+colnames(t) <- c("Treatment", "n")
+kbl(t) %>%
+    kable_classic(full_width = F, html_font = "Cambria", position = "center")
+```
+
+ + Plot - **Treatment**:
+```{r Do Ps infected flies die more than controls - plot}
+#png(file="pyralis_Psneeb.png",width=2972,height=1960, units = "px", res=400)
+par(mar=c(6,6,1,1)) #sets the margins around the graph so there is room for the labels
+plot(survfit(Surv(Days_post_infection,Status)~Treatment, data=Adult_Ps),
+     col=c( "black", "#D4A6C8","#B07AA1","#8B537B"),
+     lty=c( 1, 1, 2, 3),
+     lwd=5, #line width
+     yaxt='n',
+     xaxt='n',
+     ylab="Proportion alive", #label for the y-axis
+     xlab="Days post-treatment", #label for the x-axis
+     cex.lab=2.5, #font size of axis labels
+     xlim=c(0,25), #determines range of the x-axis
+     xaxs='i') #makes the data flush with the axis
+axis(2, #left side
+     las=3, #perpendicular to the axis
+     cex.axis=2, #font size
+     lwd=5) #line width
+axis(1, #bottom of the graph
+     cex.axis=2, #font size
+     lwd=5) #line width
+box(lwd=5)
+
+legend("topright", bty="n", c("Sterile saline (n=97)","0.1 Ps (n=41)","1.0 Ps (n=40)","5.0 Ps (n=38)"), col=c("black", "#D4A6C8","#B07AA1","#8B537B"), lty=c( 1, 1, 2, 3),lwd=5, cex=legend_size)
+
+#dev.off()
+```
+  
+  + Alternative plot - SeasonDay separate
+    + Sample size:
+```{r Ps SD x T table}
+#make SD categories
+Adult_Ps$SDcategory<- cut(Adult_Ps$SeasonDay, breaks = c(5, 18, Inf))
+
+#make SD by treatment variable
+Adult_Ps$SD_Treatment<-paste(Adult_Ps$SDcategory, Adult_Ps$Treatment, sep="_")
+#unique(Adult_Ps$Treatment)
+#unique(Adult_Ps$SD_Treatment)
+
+Adult_Ps$SD_Treatment <- factor(Adult_Ps$SD_Treatment, levels=c("(5,18]_02_PBS ", "(5,18]_06_Ps_0.1", "(5,18]_06_Ps_1.0", "(5,18]_06_Ps_5.0", "(18,Inf]_02_PBS ", "(18,Inf]_06_Ps_0.1", "(18,Inf]_06_Ps_1.0", "(18,Inf]_06_Ps_5.0"))
+
+t <- data.frame(table(Adult_Ps$SD_Treatment))
+
+t$Var1 <- c("Early, PBS", "Early, 0.1 P. sneebia", "Early,  1.0 P. sneebia", "Early, 5.0 P. sneebia", "Late, PBS", "Late, 0.1 P. sneebia", "Late,  1.0 P. sneebia", "Late, 5.0 P. sneebia")
+
+colnames(t) <- c("Treatment", "n")
+
+kbl(t) %>%
+    kable_classic(full_width = F, html_font = "Cambria", position = "center")
+```
+
+    + Plot
+```{r alternative Ps SD x Treatment plot, fig.align='center', fig.height=4, fig.width=6}
+interaction_legend_size = 1.4
+
+Adult_Ps_Early <- Adult_Ps[Adult_Ps$SDcategory == "(5,18]",]
+Adult_Ps_Late <- Adult_Ps[Adult_Ps$SDcategory == "(18,Inf]",]
+
+#early
+#png(file="Survival_Treatment_Ps_Early.png",width=2972,height=1960,units = "px", res=400)
+par(mar=c(6,6,1,1)) #sets the margins around the graph so there is room for the labels
+plot(survfit(Surv(Days_post_infection,Status)~Treatment, data=Adult_Ps_Early),
+     col= c("black", "#D4A6C8","#B07AA1","#8B537B"),
+     lty=rep(1, 4),
+     lwd=5, #line width
+     yaxt='n',
+     xaxt='n',
+     ylab="Proportion alive", #label for the y-axis
+     xlab="Days post-treatment", #label for the x-axis
+     cex.lab=2.5, #font size ofange of the x-axis
+     xlim=c(0,25),
+     xaxs='i') #makes the data flush with the axis
+axis(2, #left side
+     las=3, #perpendicular to the axis
+     cex.axis=2, #font size
+     lwd=5) #line width
+axis(1, #bottom of the graph
+     cex.axis=2, #font size
+     lwd=5) #line width
+box(lwd=5)
+
+legend("topright", bty="n" , c("Early, Sterile saline (n=55)", "Early, 0.1 Ps (n=28)", "Early, 1.0 Ps (n=26)", "Early, 5.0 Ps (n=24)"), col=c("black", "#D4A6C8","#B07AA1","#8B537B"), lty=rep(1, 4), lwd=5, cex=interaction_legend_size)
+
+#dev.off()
+
+#late
+#png(file="Survival_Treatment_Ps_Late.png",width=2972,height=1960,units = "px", res=400)
+par(mar=c(6,6,1,1)) #sets the margins around the graph so there is room for the labels
+plot(survfit(Surv(Days_post_infection,Status)~Treatment, data=Adult_Ps_Late),
+     col= c("black", "#D4A6C8","#B07AA1","#8B537B"),
+     lty=rep(1, 4),
+     lwd=5, #line width
+     yaxt='n',
+     xaxt='n',
+     ylab="Proportion alive", #label for the y-axis
+     xlab="Days post-treatment", #label for the x-axis
+     cex.lab=2.5, #font size ofange of the x-axis
+     xlim=c(0,25),
+     xaxs='i') #makes the data flush with the axis
+axis(2, #left side
+     las=3, #perpendicular to the axis
+     cex.axis=2, #font size
+     lwd=5) #line width
+axis(1, #bottom of the graph
+     cex.axis=2, #font size
+     lwd=5) #line width
+box(lwd=5)
+
+legend("topright", bty="n" , c("Late, Sterile saline (n=42)", "Late, 0.1 Ps (n=13)", "Late, 1.0 Ps (n=14)", "Late, 5.0 Ps (n=14)"), col=c("black", "#D4A6C8","#B07AA1","#8B537B"), lty=rep(1, 4), lwd=5, cex=interaction_legend_size)
+
+#dev.off()
+```
+
+___
+
+### *Pseudomonas aeruginosa*
+
+#### Q1. Do **Pa** infected flies die more than controls and is mortality due to **Pa** impacted by **Condition** and **Season Day**?
+
+```{r define Pa datasets}
+#subset the data to include only dates where Pa infection was administered
+Adult_Pa_date<- subset(Adult_Final, CollectionDate=="28-Jun"|CollectionDate=="30-Jun"|CollectionDate=="14-Jul"|CollectionDate=="20-Jul")
+
+#subset that data to only include PBS controls and Sm infected fireflies for coxph analysis
+Adult_Pa<-subset(Adult_Pa_date,BacterialSpecies=="02_PBS"|BacterialSpecies=="03_Paerug")
+```
+
+  + Subset based on dates that Pa was used, then only retained Pa infected flies and sterile saline control to serve as a baseline.
+    + Note: Based on `r nrow(Adult_Pa)` fireflies
+  
+  + Initial analysis with **Treatment only** indicated that this factor does not have time-dependence and so proceeded with multi-variate analysis.
+  
+  + Same order of covariates for multivariable models as uninfected
+   
+  + **CONCLUSION**
+    + As expected, covariates **Condition** and **Season Day** all have a significant impact on survival(p = 0.001, p = 0.008, respectively). 
+    + **Treatment** did NOT significantly impact survival (p = 0.45). 
+    + No interactions were significant. 
+    + Cannot reject null in residual analysis (no time-dependence).
+    + In model reduction, removing both interaction terms and **Treatment** did not significantly weaken the model (p = 0.46), further supporting that treatment with these doses of *P. aeruginosa* did not affect mortality.
+  
+#### **Treatment only** analysis 
+  + Summary - **Treatment only** analysis
+```{r Treatment only Analysis Pa}
+
+modelPa_uni <- coxph(Surv(Days_post_infection, Status) ~ Treatment, data = Adult_Pa)
+summary(modelPa_uni)
+```
+ 
+  + ANOVA - **Treatment only** analysis
+```{r Treatment only model Pa - anova}
+#anova
+t <- anova(modelPa_uni)
+
+#set some formatting before using cable (num digits to display, bolding based on significance)
+t[,4] = round(t[,4], digits = 10)
+row.names(t) = cell_spec(row.names(t), bold = ifelse(t[,4] < 0.05, "TRUE", "FALSE"))
+t[,4] = cell_spec(t[,4], bold = ifelse(t[,4] < 0.05, "TRUE", "FALSE"))
+
+#make nice table with kable
+kbl(t, escape = FALSE, digits = c(2, 2, 2, 3)) %>%
+  kable_classic(full_width = F, html_font = "Cambria", position = "center")
+```  
+
+  + Checking model assumptions (beta coef = flat)
+```{r Treatment only multivariable - assumptions - Pa, fig.height = 3, fid.width = 3.5}
+fitPa_uni<-cox.zph(modelPa_uni, transform="km", global=TRUE)
+print(fitPa_uni)
+```
+
+#### **multivariable** analysis
+
+  + Check whether *Location* should be included as a random effect.
+
+```{r Mutlivariate analysis - location as random effect - Pa}
+modelPa_full <- coxph(Surv(Days_post_infection, Status) ~ Condition + SeasonDay + Treatment + Condition:Treatment + SeasonDay:Treatment, data = Adult_Pa)
+
+modelPa_full_random <- coxme(Surv(Days_post_infection, Status) ~ Condition + SeasonDay + Treatment + Condition:Treatment + SeasonDay:Treatment + (1|Location2), data = Adult_Pa)
+
+anova(modelPa_full_random, modelPa_full)
+```
+
+  + Conclusion
+    + Location as a random effect does not improve model fit. Not keeping it in future models.
+
+  + Summary - **multivariable** analysis
+```{r Mutlivariate analysis - Pa}
+modelPa_full <- coxph(Surv(Days_post_infection, Status) ~ Condition + SeasonDay + Treatment + Condition:Treatment + SeasonDay:Treatment, data = Adult_Pa)
+summary(modelPa_full)
+```
+  
+  + ANOVA - **multivariable** analysis
+```{r multivariable analysis - anova - Pa}
+#anova
+t <- anova(modelPa_full)
+
+#set some formatting before using cable (num digits to display, bolding based on significance)
+t[,4] = round(t[,4], digits = 10)
+row.names(t) = cell_spec(row.names(t), bold = ifelse(t[,4] < 0.05, "TRUE", "FALSE"))
+t[,4] = cell_spec(t[,4], bold = ifelse(t[,4] < 0.05, "TRUE", "FALSE"))
+
+#make nice table with kable
+kbl(t, escape = FALSE, digits = c(2, 2, 2, 3)) %>%
+  kable_classic(full_width = F, html_font = "Cambria", position = "center")
+```  
+
+  + Checking model assumptions (beta coef = flat)
+```{r multivariable - assumptions - Pa, fig.height = 3, fid.width = 3.5}
+fitPa_full<-cox.zph(modelPa_full, transform="km", global=TRUE)
+print(fitPa_full)
+```
+
+#### Reduced **multivariable** analysis
+  + Summary - Reduced **multivariable** analysis
+```{r Redux multivariable analysis - Pa}
+modelPa_redux <- coxph(Surv(Days_post_infection, Status) ~ Condition + SeasonDay, data = Adult_Pa)
+summary(modelPa_redux)
+```
+  
+  + ANOVA - Reduced **multivariable** analysis
+```{r Reduced multivariable analysis - anova - Pa}
+#anova
+t <- anova(modelPa_redux)
+
+#set some formatting before using cable (num digits to display, bolding based on significance)
+t[,4] = round(t[,4], digits = 10)
+row.names(t) = cell_spec(row.names(t), bold = ifelse(t[,4] < 0.05, "TRUE", "FALSE"))
+t[,4] = cell_spec(t[,4], bold = ifelse(t[,4] < 0.05, "TRUE", "FALSE"))
+
+#make nice table with kable
+kbl(t, escape = FALSE, digits = c(2, 2, 2, 3)) %>%
+  kable_classic(full_width = F, html_font = "Cambria", position = "center")
+```
+  
+  + Checking model assumptions (beta coef = flat)
+```{r Reduced multivariable - assumptions Pa, fig.height = 3, fid.width = 3.5}
+fitPa_redux<-cox.zph(modelPa_redux, transform="km", global=TRUE)
+print(fitPa_redux)
+```
+
+ + Comparison of reduced model to full model
+
+```{r Does removal of non-significant interaction terms weaken the model - Pa}
+anova(modelPa_full, modelPa_redux)
+```
+ + CONCLUSION
+  + Removal of non-significant terms does not weaken the model
+  
+ + Comparison of reduced model to Treatment only model
+```{r Does addition of the co-variates Condition and Season Day improve the model - Pa}
+anova(modelPa_redux,modelPa_uni)
+```
+ + CONCLUSION
+  + Addition of covariates significantly improves the model
+
+#### Individual factor plots
+
+##### **Treatment**
+  + Sample Size: 
+```{r Do Pa infected flies die more than controls - sample size}
+t <- data.frame(table(Adult_Pa$Treatment))
+t$Var1 <- c("PBS", "Pa Abs600nm 0.1", "Pa Abs600nm 1.0", "Pa Abs600nm 5.0")
+colnames(t) <- c("Treatment", "n")
+kbl(t) %>%
+    kable_classic(full_width = F, html_font = "Cambria", position = "center")
+```
+
+ + Plot - **Treatment**:
+```{r Do Pa infected flies die more than controls - plot}
+#png(file="pyralis_Paeru.png",width=2972,height=1960, units = "px", res=400)
+par(mar=c(6,6,1,1)) #sets the margins around the graph so there is room for the labels
+plot(survfit(Surv(Days_post_infection,Status)~Treatment, data=Adult_Pa),
+     col=c( "black", "#D4A6C8","#B07AA1","#8B537B"),
+     lty=c( 1, 1, 2, 3),
+     lwd=5, #line width
+     yaxt='n',
+     xaxt='n',
+     ylab="Proportion alive", #label for the y-axis
+     xlab="Days post-treatment", #label for the x-axis
+     cex.lab=2.5, #font size of axis labels
+     xlim=c(0,25), #determines range of the x-axis
+     xaxs='i') #makes the data flush with the axis
+axis(2, #left side
+     las=3, #perpendicular to the axis
+     cex.axis=2, #font size
+     lwd=5) #line width
+axis(1, #bottom of the graph
+     cex.axis=2, #font size
+     lwd=5) #line width
+box(lwd=5)
+
+legend("topright", bty="n", c("Sterile saline (n=43)","0.1 Pa (n=22)","1.0 Pa (n=21)","5.0 Pa (n=21)"), col=c("black", "#D4A6C8","#B07AA1","#8B537B"), lty=c( 1, 1, 2, 3),lwd=5, cex=legend_size)
+
+#dev.off()
+```
+
+  + Alternative plot - SeasonDay separate
+    + Sample size:
+```{r Pa SD x T table}
+#make SD categories
+Adult_Pa$SDcategory<- cut(Adult_Pa$SeasonDay, breaks = c(5, 18, Inf))
+
+#make SD by treatment variable
+Adult_Pa$SD_Treatment<-paste(Adult_Pa$SDcategory, Adult_Pa$Treatment, sep="_")
+#unique(Adult_Pa$Treatment)
+#unique(Adult_Pa$SD_Treatment)
+
+Adult_Pa$SD_Treatment <- factor(Adult_Pa$SD_Treatment, levels=c("(5,18]_02_PBS ", "(5,18]_03_Pa_0.1", "(5,18]_03_Pa_1.0", "(5,18]_03_Pa_5.0", "(18,Inf]_02_PBS ", "(18,Inf]_03_Pa_0.1", "(18,Inf]_03_Pa_1.0", "(18,Inf]_03_Pa_5.0"))
+
+t <- data.frame(table(Adult_Pa$SD_Treatment))
+
+t$Var1 <- c("Early, PBS", "Early, 0.1 P. aeruginosa", "Early,  1.0 P. aeruginosa", "Early, 5.0 P. aeruginosa", "Late, PBS", "Late, 0.1 P. aeruginosa", "Late,  1.0 P. aeruginosa", "Late, 5.0 P. aeruginosa")
+
+colnames(t) <- c("Treatment", "n")
+
+kbl(t) %>%
+    kable_classic(full_width = F, html_font = "Cambria", position = "center")
+```
+
+    + Plot
+```{r alt Pa SD x Treatment plot, fig.align='center', fig.height=4, fig.width=6}
+interaction_legend_size = 1.4
+
+Adult_Pa_Early <- Adult_Pa[Adult_Pa$SDcategory == "(5,18]",]
+Adult_Pa_Late <- Adult_Pa[Adult_Pa$SDcategory == "(18,Inf]",]
+
+#early
+#png(file="Survival_Treatment_Pa_Early.png",width=2972,height=1960,units = "px", res=400)
+par(mar=c(6,6,1,1)) #sets the margins around the graph so there is room for the labels
+plot(survfit(Surv(Days_post_infection,Status)~Treatment, data=Adult_Pa_Early),
+     col= c("black", "#D4A6C8","#B07AA1","#8B537B"),
+     lty=rep(1, 4),
+     lwd=5, #line width
+     yaxt='n',
+     xaxt='n',
+     ylab="Proportion alive", #label for the y-axis
+     xlab="Days post-treatment", #label for the x-axis
+     cex.lab=2.5, #font size ofange of the x-axis
+     xlim=c(0,25),
+     xaxs='i') #makes the data flush with the axis
+axis(2, #left side
+     las=3, #perpendicular to the axis
+     cex.axis=2, #font size
+     lwd=5) #line width
+axis(1, #bottom of the graph
+     cex.axis=2, #font size
+     lwd=5) #line width
+box(lwd=5)
+
+legend("topright", bty="n" , c("Early, Sterile saline (n=21)", "Early, 0.1 Pa (n=14)", "Early, 1.0 Pa (n=13)", "Early, 5.0 Pa (n=13)"), col=c("black", "#D4A6C8","#B07AA1","#8B537B"), lty=rep(1, 4), lwd=5, cex=interaction_legend_size)
+
+#dev.off()
+
+#late
+#png(file="Survival_Treatment_Pa_Late.png",width=2972,height=1960,units = "px", res=400)
+par(mar=c(6,6,1,1)) #sets the margins around the graph so there is room for the labels
+plot(survfit(Surv(Days_post_infection,Status)~Treatment, data=Adult_Pa_Late),
+     col= c("black", "#D4A6C8","#B07AA1","#8B537B"),
+     lty=rep(1, 4),
+     lwd=5, #line width
+     yaxt='n',
+     xaxt='n',
+     ylab="Proportion alive", #label for the y-axis
+     xlab="Days post-treatment", #label for the x-axis
+     cex.lab=2.5, #font size ofange of the x-axis
+     xlim=c(0,25),
+     xaxs='i') #makes the data flush with the axis
+axis(2, #left side
+     las=3, #perpendicular to the axis
+     cex.axis=2, #font size
+     lwd=5) #line width
+axis(1, #bottom of the graph
+     cex.axis=2, #font size
+     lwd=5) #line width
+box(lwd=5)
+
+legend("topright", bty="n" , c("Late, Sterile saline (n=22)", "Late, 0.1 Pa (n=8)", "Late, 1.0 Pa (n=8)", "Late, 5.0 Pa (n=8)"), col=c("black", "#D4A6C8","#B07AA1","#8B537B"), lty=rep(1, 4), lwd=5, cex=interaction_legend_size)
+
+#dev.off()
+```
+___
+
+### *Enterococcus faecalis*
+
+#### Q1. Do **Ef** infected flies die more than controls and is mortality due to **Ef** impacted by **Condition** and **Season Day**?
+
+```{r define Ef datasets}
+#subset the data to include only dates where Ef infection was administered
+Adult_Ef_date<- subset(Adult_Final, CollectionDate=="10-Jul"|CollectionDate=="12-Jul"|CollectionDate=="14-Jul"|CollectionDate=="19-Jul"|CollectionDate=="20-Jul"|CollectionDate=="28-Jul")
+
+#subset that data to only include PBS controls and Sm infected fireflies for coxph analysis
+Adult_Ef<-subset(Adult_Ef_date,BacterialSpecies=="02_PBS"|BacterialSpecies=="07_Efaec")
+```
+
+  + Subset based on dates that Ef was used, then only retained Ef infected flies and sterile saline control to serve as a baseline.
+    + Note: Based on `r nrow(Adult_Ef)` fireflies
+  + Initial analysis with **Treatment only** indicated that this factor does not have time-dependence and so proceeded with multi-variate analysis.
+  + For multivariable models, same order of covariates as uninfected
+  + **CONCLUSION**
+    + As expected, covariates **Condition** and **Season Day** all have a significant impact on survival (p << 0.001, p = 0.018, respectively). 
+    + **Treatment** did NOT significantly impact survival (p = 0.45). 
+    + No interactions were significant. 
+    + Cannot reject null in residual analysis (no time-dependence).
+  
+#### **Treatment only** analysis
+  + SUmmary - **Treatment only** analysis
+```{r Treatment only Analysis Ef}
+
+modelEf_uni <- coxph(Surv(Days_post_infection, Status) ~ Treatment, data = Adult_Ef)
+summary(modelEf_uni)
+```
+ 
+  + ANOVA - **Treatment only** analysis
+```{r Treatment only model Ef - anova}
+#anova
+t <- anova(modelEf_uni)
+
+#set some formatting before using cable (num digits to display, bolding based on significance)
+t[,4] = round(t[,4], digits = 10)
+row.names(t) = cell_spec(row.names(t), bold = ifelse(t[,4] < 0.05, "TRUE", "FALSE"))
+t[,4] = cell_spec(t[,4], bold = ifelse(t[,4] < 0.05, "TRUE", "FALSE"))
+
+#make nice table with kable
+kbl(t, escape = FALSE, digits = c(2, 2, 2, 3)) %>%
+  kable_classic(full_width = F, html_font = "Cambria", position = "center")
+```  
+
+  + Checking model assumptions (beta coef = flat)
+```{r Treatment only multivariable - assumptions - Ef, fig.height = 3, fid.width = 3.5}
+fitEf_uni<-cox.zph(modelEf_uni, transform="km", global=TRUE)
+print(fitEf_uni)
+```
+
+#### **multivariable** analysis
+
+  + Check whether *Location* should be included as a random effect.
+
+```{r Multivariable analysis - location as random effect - Ef}
+modelEf_full <- coxph(Surv(Days_post_infection, Status) ~ Condition + SeasonDay + Treatment + Condition:Treatment + SeasonDay:Treatment, data = Adult_Ef)
+
+modelEf_full_random <- coxme(Surv(Days_post_infection, Status) ~ Condition + SeasonDay + Treatment + Condition:Treatment + SeasonDay:Treatment + (1|Location2), data = Adult_Ef)
+
+anova(modelEf_full_random, modelEf_full)
+```
+
+  + Conclusion
+    + Location as a random effect does not improve model fit. Not keeping it in future models.
+
+  + Summary - **multivariable** Analysis
+```{r Mutlivariate analysis - Ef}
+summary(modelEf_full)
+```
+  
+  + ANOVA - **multivariable** analysis
+```{r multivariable analysis - anova - Ef}
+#anova
+t <- anova(modelEf_full)
+
+#set some formatting before using cable (num digits to display, bolding based on significance)
+t[,4] = round(t[,4], digits = 10)
+row.names(t) = cell_spec(row.names(t), bold = ifelse(t[,4] < 0.05, "TRUE", "FALSE"))
+t[,4] = cell_spec(t[,4], bold = ifelse(t[,4] < 0.05, "TRUE", "FALSE"))
+
+#make nice table with kable
+kbl(t, escape = FALSE, digits = c(2, 2, 2, 3)) %>%
+  kable_classic(full_width = F, html_font = "Cambria", position = "center")
+```  
+
+  + Checking model assumptions (beta coef = flat)
+```{r multivariable - assumptions - Ef, fig.height = 3, fid.width = 3.5}
+fitEf_full<-cox.zph(modelEf_full, transform="km", global=TRUE)
+print(fitEf_full)
+```
+
+#### Reduced **multivariable** analysis
+  + Summary - Reduced **multivariable** analysis
+```{r Redux multivariable analysis - Ef}
+modelEf_redux <- coxph(Surv(Days_post_infection, Status) ~ Condition + SeasonDay, data = Adult_Ef)
+summary(modelEf_redux)
+```
+  
+  + ANOVA - Reduced **multivariable** analysis
+```{r Reduced multivariable analysis - anova - Ef}
+#anova
+t <- anova(modelEf_redux)
+
+#set some formatting before using cable (num digits to display, bolding based on significance)
+t[,4] = round(t[,4], digits = 10)
+row.names(t) = cell_spec(row.names(t), bold = ifelse(t[,4] < 0.05, "TRUE", "FALSE"))
+t[,4] = cell_spec(t[,4], bold = ifelse(t[,4] < 0.05, "TRUE", "FALSE"))
+
+#make nice table with kable
+kbl(t, escape = FALSE, digits = c(2, 2, 2, 3)) %>%
+  kable_classic(full_width = F, html_font = "Cambria", position = "center")
+```
+  
+  + Checking model assumptions (beta coef = flat)
+```{r Reduced multivariable - assumptions Ef, fig.height = 3, fid.width = 3.5}
+fitEf_redux<-cox.zph(modelEf_redux, transform="km", global=TRUE)
+print(fitEf_redux)
+```
+
+ + Comparison of reduced model to full model
+
+```{r Does removal of non-significant interaction terms weaken the model - Ef}
+anova(modelEf_full, modelEf_redux)
+```
+  + CONCLUSION
+    + Removal of non-significant terms does not weaken the model
+    
+ + Comparison of reduced model to Treatment only model
+```{r Does addition of the co-variates Condition and Season Day improve the model - Ef}
+anova(modelEf_redux,modelEf_uni)
+```
+ + CONCLUSION
+    + Addition of covariates significantly improves the model
+
+#### Individual factor plots
+
+##### **Treatment**
+  + Sample Size: 
+```{r Do Ef infected flies die more than controls - sample size}
+t <- data.frame(table(Adult_Ef$Treatment))
+t$Var1 <- c("PBS", "Ef Abs600nm 0.1", "Ef Abs600nm 1.0", "Ef Abs600nm 5.0")
+colnames(t) <- c("Treatment", "n")
+kbl(t) %>%
+    kable_classic(full_width = F, html_font = "Cambria", position = "center")
+```
+
+ + Plot - **Treatment**:
+```{r Do Ef infected flies die more than controls - plot}
+#png(file="pyralis_Efaec.png",width=2972,height=1960, units = "px", res=400)
+par(mar=c(6,6,1,1)) #sets the margins around the graph so there is room for the labels
+plot(survfit(Surv(Days_post_infection,Status)~Treatment, data=Adult_Ef),
+     col=c( "black", "#D4A6C8","#B07AA1","#8B537B"),
+     lty=c( 1, 1, 2, 3),
+     lwd=5, #line width
+     yaxt='n',
+     xaxt='n',
+     ylab="Proportion alive", #label for the y-axis
+     xlab="Days post-treatment", #label for the x-axis
+     cex.lab=2.5, #font size of axis labels
+     xlim=c(0,25), #determines range of the x-axis
+     xaxs='i') #makes the data flush with the axis
+axis(2, #left side
+     las=3, #perpendicular to the axis
+     cex.axis=2, #font size
+     lwd=5) #line width
+axis(1, #bottom of the graph
+     cex.axis=2, #font size
+     lwd=5) #line width
+box(lwd=5)
+
+legend("topright", bty="n", c("Sterile saline (n=127)","0.1 Ef (n=36)","1.0 Ef (n=40)","5.0 Ef (n=74)"), col=c("black", "#D4A6C8","#B07AA1","#8B537B"), lty=c( 1, 1, 2, 3),lwd=5, cex=legend_size)
+
+#dev.off()
+```
+
+  + Alternative plot - SeasonDay separate
+    + Sample size:
+```{r Ef SD x T table}
+#make SD categories
+Adult_Ef$SDcategory<- cut(Adult_Ef$SeasonDay, breaks = c(5, 18, Inf))
+
+#make SD by treatment variable
+Adult_Ef$SD_Treatment<-paste(Adult_Ef$SDcategory, Adult_Ef$Treatment, sep="_")
+#unique(Adult_Ef$Treatment)
+#unique(Adult_Ef$SD_Treatment)
+
+Adult_Ef$SD_Treatment <- factor(Adult_Ef$SD_Treatment, levels=c("(5,18]_02_PBS ", "(5,18]_07_Ef_0.1", "(5,18]_07_Ef_1.0", "(5,18]_07_Ef_5.0", "(18,Inf]_02_PBS ", "(18,Inf]_07_Ef_0.1", "(18,Inf]_07_Ef_1.0", "(18,Inf]_07_Ef_5.0"))
+
+t <- data.frame(table(Adult_Ef$SD_Treatment))
+
+t$Var1 <- c("Early, PBS", "Early, 0.1 E. faecalis", "Early,  1.0 E. faecalis", "Early, 5.0 E. faecalis", "Late, PBS", "Late, 0.1 E. faecalis", "Late,  1.0 E. faecalis", "Late, 5.0 E. faecalis")
+
+colnames(t) <- c("Treatment", "n")
+
+kbl(t) %>%
+    kable_classic(full_width = F, html_font = "Cambria", position = "center")
+```
+
+    + Plot
+```{r alt Ef SD x Treatment plot, fig.align='center', fig.height=4, fig.width=6}
+interaction_legend_size = 1.4
+
+Adult_Ef_Early <- Adult_Ef[Adult_Ef$SDcategory == "(5,18]",]
+Adult_Ef_Late <- Adult_Ef[Adult_Ef$SDcategory == "(18,Inf]",]
+
+#early
+#png(file="Survival_Treatment_Ef_Early.png",width=2972,height=1960,units = "px", res=400)
+par(mar=c(6,6,1,1)) #sets the margins around the graph so there is room for the labels
+plot(survfit(Surv(Days_post_infection,Status)~Treatment, data=Adult_Ef_Early),
+     col= c("black", "#D4A6C8","#B07AA1","#8B537B"),
+     lty=rep(1, 4),
+     lwd=5, #line width
+     yaxt='n',
+     xaxt='n',
+     ylab="Proportion alive", #label for the y-axis
+     xlab="Days post-treatment", #label for the x-axis
+     cex.lab=2.5, #font size ofange of the x-axis
+     xlim=c(0,25),
+     xaxs='i') #makes the data flush with the axis
+axis(2, #left side
+     las=3, #perpendicular to the axis
+     cex.axis=2, #font size
+     lwd=5) #line width
+axis(1, #bottom of the graph
+     cex.axis=2, #font size
+     lwd=5) #line width
+box(lwd=5)
+
+legend("topright", bty="n" , c("Early, Sterile saline (n=55)", "Early, 0.1 Ef (n=22)", "Early, 1.0 Ef (n=25)", "Early, 5.0 Ef (n=29)"), col=c("black", "#D4A6C8","#B07AA1","#8B537B"), lty=rep(1, 4), lwd=5, cex=interaction_legend_size)
+
+#dev.off()
+
+#late
+#png(file="Survival_Treatment_Ef_Late.png",width=2972,height=1960,units = "px", res=400)
+par(mar=c(6,6,1,1)) #sets the margins around the graph so there is room for the labels
+plot(survfit(Surv(Days_post_infection,Status)~Treatment, data=Adult_Ef_Late),
+     col= c("black", "#D4A6C8","#B07AA1","#8B537B"),
+     lty=rep(1, 4),
+     lwd=5, #line width
+     yaxt='n',
+     xaxt='n',
+     ylab="Proportion alive", #label for the y-axis
+     xlab="Days post-treatment", #label for the x-axis
+     cex.lab=2.5, #font size ofange of the x-axis
+     xlim=c(0,25),
+     xaxs='i') #makes the data flush with the axis
+axis(2, #left side
+     las=3, #perpendicular to the axis
+     cex.axis=2, #font size
+     lwd=5) #line width
+axis(1, #bottom of the graph
+     cex.axis=2, #font size
+     lwd=5) #line width
+box(lwd=5)
+
+legend("topright", bty="n" , c("Late, Sterile saline (n=72)", "Late, 0.1 Ef (n=14)", "Late, 1.0 Ef (n=15)", "Late, 5.0 Ef (n=45)"), col=c("black", "#D4A6C8","#B07AA1","#8B537B"), lty=rep(1, 4), lwd=5, cex=interaction_legend_size)
+
+#dev.off()
+```
+
+---
+
+### Plots for main text and supplement
+
+#### **Treatment** multi-panel plot
+
+ + Note: gave up on trying to make this pretty in R -> exported to pdf and modified in Adobe Illustrator. 
+
+```{r multipanel plot, message = FALSE}
+a <- ggdraw() +
+  draw_image("pyralis_Smarc_DB1140.png")
+
+b <- ggdraw() +
+  draw_image("pyralis_Prett.png")
+
+c <- ggdraw() +
+  draw_image("pyralis_Psneeb.png")
+
+d <- ggdraw() +
+  draw_image("pyralis_Paeru.png")
+
+e <- ggdraw() +
+  draw_image("pyralis_Efaec.png")
+
+#using patchwork
+#get the plots together
+
+#multiplot <- a + a2 + b + b2 + c + c2 + d + d2 + e + e2
+#w <- multiplot + 
+#  plot_annotation(tag_levels = 'A')
+#ggsave("Fig.3.Infected_analysis_dose_unedited.pdf", w, device = "pdf")
+#w
+
+multiplot <- a/b/c/d/e
+x <- multiplot + 
+  plot_annotation(tag_levels = 'A')
+#ggsave("Fig.3.Infected_analysis_dose_column_unedited_06_29_22.pdf", x, device = "pdf")
+
+x
+```
+
+#### **SeasonDay:Treatment** multi-panel plot
+Only  Pr
+```{r Pr multipanel interaction plot, message = FALSE}
+h <- ggdraw() +
+  draw_image("Survival_SD_Treatment_Pr_Early.png")
+
+i <- ggdraw() +
+  draw_image("Survival_SD_Treatment_Pr_Late_solid.png")
+
+multiplot <- h + i
+z <- multiplot + 
+  plot_annotation(tag_levels = 'A')
+#ggsave("Fig.4.Infected_analysis_interactions_2_panels.pdf", z, device = "pdf")
+z
+
+j <- ggdraw() +
+  draw_image("pyralis_Prett_SDxT_HR_06_28_22.png")
+
+layout <- "
+AAAA
+AAAA
+BBBB
+BBBB
+BBBB
+"
+
+multiplot2 <- (h + i)/j  + 
+  plot_annotation(tag_levels = 'A') +
+  plot_layout(design = layout)
+#ggsave("Fig.4.Infected_analysis_interactions_3_panels_sized.pdf", multiplot2, device = "pdf")
+multiplot2
+
+
+```
+
+#### **SeasonDay and Treatment** multi-panel plots for supplement
+All infections
+```{r supp multipanel interaction plot, message = FALSE}
+j <- ggdraw() +
+  draw_image("Survival_Treatment_Sm_Early.png")
+
+k <- ggdraw() +
+  draw_image("Survival_Treatment_Sm_Late.png")
+
+#h #Pr graph already in 
+
+#i #Pr graph already in 
+
+l <- ggdraw() +
+  draw_image("Survival_Treatment_Ps_Early.png")
+
+m <- ggdraw() +
+  draw_image("Survival_Treatment_Ps_Late.png")
+
+n <- ggdraw() +
+  draw_image("Survival_Treatment_Pa_Early.png")
+
+o <- ggdraw() +
+  draw_image("Survival_Treatment_Pa_Late.png")
+
+p <- ggdraw() +
+  draw_image("Survival_Treatment_Ef_Early.png")
+
+q <- ggdraw() +
+  draw_image("Survival_Treatment_Ef_Late.png")
+
+multiplot <- (j + k)/(h + i)/(l + m)/(n + o)/(p+q)
+z <- multiplot + 
+  plot_annotation(tag_levels = 'A')
+#ggsave("SFig.2.All_inf_early_late_separate.pdf", z, device = "pdf")
+z
+```
+
+#### **Hazard ratio** multi-panel plot for Sm and Pr only
+other infections are HR of 1 because there is no treatment coefficient in the reduced models), for supplement
+
+```{r HR plot Sm and Pr, message = FALSE}
+
+a2 <- ggdraw() +
+  draw_image("pyralis_Smarc_DB1140_HR.png")
+
+b2 <- ggdraw() +
+  draw_image("pyralis_Prett_HR.png")
+
+multiplot <- a2 + b2  + 
+  plot_annotation(tag_levels = 'A') 
+
+#ggsave("SFig.1.HR_plots_8_24_22.pdf", multiplot, device = "pdf")
+multiplot
+```
+
+
+---
+
+## Session Info
+```{r session info}
+sessionInfo()
+```
+

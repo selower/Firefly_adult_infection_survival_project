@@ -1,0 +1,533 @@
+---
+title: "P. pyralis adult infection survival: overall survival + uninfected firefly analysis"
+author: "Moria Chambers + Sarah Lower"
+date: "`r Sys.Date()`"
+editor_options: 
+  chunk_output_type: console
+output: 
+  html_document:
+    toc: TRUE
+    toc_float: TRUE
+    toc_depth: 6
+    theme: cerulean
+    code_folding: hide
+---
+
+# **Goal: Generate overall summary statistics for all fireflies in the experiment  and test whether, in the ABSENCE of infection, condition, season, location, or wounding (injection with sterile PBS) affects survival of *P. pyralis* fireflies**
+
+*Study design:*
+
+![](./Experimental_design.png)
+
+---
+
+## Step 1: Ready the workspace
+```{r ready the workspace, message=FALSE}
+#clear all inputs
+rm(list = ls())
+
+#Check for necessary packages
+list.of.packages <- c("survival",
+                      "survminer",
+                      "ggplot2", 
+                      "tidyr",
+                      "dplyr",
+                      "Hmisc",
+                      "qqplotr",
+                      "ggthemes",
+                      "fabricatr",
+                      "gridExtra",
+                      "grid",
+                      "kableExtra",
+                      "sjPlot",
+                      "cowplot",
+                      "ggpubr",
+                      "patchwork",
+                      "magick", #so you can use the savekable function
+                      "webshot", #so you can use the savekable function
+                      "lme4",
+                      "RcppEigen")
+
+#should install packages that you don't have
+new.packages <- list.of.packages[!(list.of.packages %in% installed.packages()[,"Package"])]
+if(length(new.packages)) install.packages(new.packages)
+
+#Load the package that contains the Cox Propotional Hazard Function
+library(survival)
+library(ggplot2)
+library(tidyr)
+library(dplyr)
+library(Hmisc)
+library(qqplotr)
+library(ggthemes)
+library(fabricatr)
+library(survminer)
+library(gridExtra)
+library(grid)
+library(kableExtra)
+library(sjPlot)
+library(cowplot)
+library(ggpubr)
+library(patchwork)
+```
+
+---
+
+## Step 2: Import the data
+```{r import the data, results = 'hide'}
+#This imports the data from a CSV file and creates the data frame PrTC
+Adult_Final <- read.table("2021_Adult_Firefly_Survival_binned3.csv", header=TRUE, sep=",", dec=".",na.strings=".") 
+
+#Create condition variable
+Adult_Final$Condition <- Adult_Final$Mass/Adult_Final$ElytralLength
+
+#Subset the data to only include uninfected controls
+Adult_Uninfected<-subset(Adult_Final, DoseBacteriaNumber=="0")
+#nrow(Adult_Uninfected)
+
+#This sets up the color palette using tableau20: https://jrnold.github.io/ggthemes/reference/tableau_color_pal.html
+site_colors <- c("USA: Montour Co, Bucknell Natural Area" = "#4E79A7", 
+                 "USA: Union Co, Bucknell Farm" = "#F28E2B", 
+                 "USA: Union Co, Bucknell Ropes Course" = "#E15759")
+```
+
+---
+
+## Step 3: Overall survival summary statistics and plots
+
+### Q1. What does the distribution of survival look like for fireflies overall?
+
+ + The longest-lived firefly lived `r max(Adult_Final$Days_post_infection)` days and was in the `r Adult_Final$Treatment[which(Adult_Final$Days_post_infection == max(Adult_Final$Days_post_infection))]` treatment
+ 
+*Abbreviations*: 
+
+  + Un = uninjected
+  + PBS = phosphate buffered saline injection (sterile)
+  + Pa = *Pseudomonas aeruginosa* PA01
+  + Sm = *Serratia marcescens* DB1140
+  + Pr = *Providencia rettgeri*
+  + Ps = *Providencia sneebia*
+  + Ef = *Enterococcus faecalis*
+  + Abs600nm = optical absorbance at 600 nm (a measure of dose)
+  + Control = uninjected + PBS
+ 
+```{r overall survival table, message=FALSE, warning=FALSE}
+grouped <- group_by(Adult_Final, Treatment)
+
+t <- summarise(grouped, n=length(Days_post_infection), Median=median(Days_post_infection), Max=max(Days_post_infection), Min=min(Days_post_infection))
+
+t$Treatment <- c("Un", 
+                 "PBS", 
+                 "Pa Abs600nm 0.1", 
+                 "Pa Abs600nm 1.0",
+                 "Pa Abs600nm 5.0",
+                 "Sm Abs600nm 0.1",
+                 "Sm Abs600nm 1.0",
+                 "Sm Abs600nm 5.0",
+                 "Pr Abs600nm 0.1",
+                 "Pr Abs600nm 1.0",
+                 "Pr Abs600nm 5.0",
+                 "Ps Abs600nm 0.1",
+                 "Ps Abs600nm 1.0",
+                 "Ps Abs600nm 5.0",
+                 "Ef Abs600nm 0.1",
+                 "Ef Abs600nm 1.0",
+                 "Ef Abs600nm 5.0")
+
+kbl(t) %>%
+  kable_classic(full_width = F, html_font = "Cambria", position = "center")
+```
+
+ + Distributions
+```{r overall survival distributions, message=FALSE, warning=FALSE}
+# New facet label names for dose variable (as a factor)
+Adult_Final$DoseF <- factor(Adult_Final$Dose, levels = c("NA", "0.1", "1", "5"), labels = c("Control", "Abs600nm 0.1", "Abs600nm 1.0", "Abs600nm 5.0"))
+
+# New facet label names for bacterial species variable (as a factor)
+Adult_Final$BacSpF <- factor(Adult_Final$BacterialSpecies, levels = c("01_uninjected", "02_PBS", "03_Paerug", "04_Smarc", "05_Prett", "06_Psneeb", "07_Efaec"), labels = c("Un", "PBS", "Pa", "Sm", "Pr", "Ps", "Ef"))
+
+ggplot(Adult_Final, aes(x=Days_post_infection, fill=Treatment)) +
+  geom_histogram() +
+  xlab("Days post infection") +
+  ylab("N fireflies") +
+  theme(plot.title = element_text(hjust = 0.5), legend.position = "none") +
+  facet_grid(BacSpF ~ DoseF)
+```
+
+---
+
+## Step 4: Uninfected analysis
+
+### Statistics
+
+ + The median **uninfected** adult lifespan was `r median(Adult_Uninfected$Days_post_infection)` (range: `r min(Adult_Uninfected$Days_post_infection)` - `r max(Adult_Uninfected$Days_post_infection)`)
+
+ + The longest-lived **uninfected** firefly lived `r max(Adult_Uninfected$Days_post_infection)` days and was in the `r Adult_Uninfected$Treatment[which(Adult_Uninfected$Days_post_infection == max(Adult_Uninfected$Days_post_infection))]` treatment
+ 
+#### Q1. Do condition, season day, collection location, and/or type of control treatment impact the survival of uninfected fireflies? 
+
+   + This dataset only includes control treatments (sterile PBS-injected and un-injected). 
+   + Analysis using Treatment as the sole explanatory variable was conducted first
+        + Treatment did not significantly impact mortality (p = 0.31)
+        + Revealed a time-dependence to treatment, however decided to proceed with multivariable analysis as the time-dependence was mostly seen after 13 days and the rest was relatively flat.
+   + For Initial multivariable analysis: 
+        + Covariates were ordered from simplest to most complex
+        + Condition is included first in model as an indicator of energetic resources
+        + Season Day is included second as this is affected by development, age and other seasonal factors (temperature, humidity etc)
+        + Location is included next and all locations were sampled on different days
+        + Treatment is the final main effect
+        + Note: Only includes through second order interaction terms.
+   + **CONCLUSIONS**: 
+        + **Condition** and **SeasonDay** both have significant impact (p << 0.0001 and p = 0.001 respectively). 
+        + No other terms had a significant impact on survival. 
+        + Notably **Treatment** was not significant (p = 0.30), suggesting that our injection technique does not cause significant damage to the fireflies. 
+        + There was borderline time-dependence to the **Condition:Treatment** interaction, but visual examination of the residual plot revealed it to be relatively flat with the biggest deviation after 13 days post-treatment when the majority of fireflies had already died and numbers were smaller. 
+        + In order to improve the predictive power for Hazard Ratios for particular conditions, we did a step-wise reduction of our multivariable Model
+        + Terms with the least impact on the log likelihood  were removed, and then tested to see whether this significantly weakened the model by comparing it with the full model.
+        + We were able to reduce the model to only **Condition** and **SeasonDay** with no reduction in model fit (p = 0.17)
+        + **Season Day** had some time-dependence in the reduced model (p = 0.02), but examination of the residual plot showed that relation is overall very flat over time with only a mild deviation during the first day post-infeciton.
+        + Due to the significant effect of both **Condition** and **SeasonDay** on mortality in uninfected fireflies, we decided to include them as co-variates in the infection analysis.
+        + Despite no significant impact of sterile injection on mortality in either the treatment-only or multivariable model, we decided to use only sterile injected fireflies as visual inspection of the Kaplan-Mier plots suggests that they might have slightly different mortality kinetics.
+
+##### Analysis of ***Treatment only** (wounding)
+
+###### Unstratified ***Treatment only** analysis
+
+  + Summary - **Treatment only** analysis
+```{r Does Wounding Impact survival of fireflies -  treatment only}
+model_Treatment<-coxph(Surv(Days_post_infection,Status)~ Treatment, data=Adult_Uninfected)
+summary(model_Treatment)
+```
+ 
+  + ANOVA - **Treatment only** analysis
+```{r Does Wounding Impact Survival Of Uninfected - anova}
+#anova
+t <- anova(model_Treatment)
+
+#set some formatting before using cable (num digits to display, bolding based on significance)
+t[,4] = round(t[,4], digits = 10)
+row.names(t) = cell_spec(row.names(t), bold = ifelse(t[,4] < 0.05, "TRUE", "FALSE"))
+t[,4] = cell_spec(t[,4], bold = ifelse(t[,4] < 0.05, "TRUE", "FALSE"))
+
+#make nice table with kable
+kbl(t, escape = FALSE, digits = c(2, 2, 2, 3)) %>%
+  kable_classic(full_width = F, html_font = "Cambria", position = "center")
+```  
+    
+  + Checking model assumptions for Treatment (beta coef = flat) - **Treatment only** analysis
+    
+```{r Checking time-dependence of treatment}
+#check to see if there is time-dependence of treatment = yes! Need to stratify treatment. Split at d7 based plot of Beta(t) for treatment.
+fitTreatment_uni<-cox.zph(model_Treatment, transform="km", global=TRUE)
+print(fitTreatment_uni)
+plot(fitTreatment_uni)
+```
+
+  + CONCLUSION 
+    + Assumptions are NOT met, there is a time-dependence to treatment (p = 0.005) for uninfected fireflies. However, this is only an issue after about 13 days post-treatment, when the majority of the fireflies have died and numbers become small, so we decided to proceed with the multivariable analysis.
+
+##### **multivariable** analysis
+
+ + Summary - **multivariable** analysis
+```{r Does Condition Season Day and Locatoin Impact Survival Of Uninfected - Summary}
+#set up the coxph model with second-order interactions
+modelA<-coxph(Surv(Days_post_infection,Status)~ Condition + SeasonDay + Location + Treatment + Condition:SeasonDay + Condition:Location + Condition:Treatment + SeasonDay:Location + SeasonDay:Treatment + Location:Treatment, data=Adult_Uninfected)
+
+summary(modelA)
+```
+    
+  + ANOVA - **multivariable** analysis
+```{r Do Condition Season Day and Location Impact Survival Of Uninfected - anova}
+#anova
+t <- anova(modelA)
+
+#set some formatting before using cable (num digits to display, bolding based on significance)
+t[,4] = round(t[,4], digits = 10)
+row.names(t) = cell_spec(row.names(t), bold = ifelse(t[,4] < 0.05, "TRUE", "FALSE"))
+t[,4] = cell_spec(t[,4], bold = ifelse(t[,4] < 0.05, "TRUE", "FALSE"))
+
+#make nice table with kable
+kbl(t, escape = FALSE, digits = c(2, 2, 2, 3)) %>%
+  kable_classic(full_width = F, html_font = "Cambria", position = "center")
+```
+  
+  + Checking model assumptions (beta coef = flat) - multivariable
+```{r Does Condition Impact Survival Of Uninfected - assumptions, fig.height = 3, fid.width = 3.5}
+#Check to see how the model looks - does it fulfill assumptions
+fitA<-cox.zph(modelA, transform="km", global=TRUE)
+print(fitA)
+plot(fitA)
+```
+
+###### Reduced multivariable analysis
+ 
+ + Model reduction to allow calculation of more useful Hazard Ratios
+ 
+*Note: stepwise reduction not shown for space, only the tests for the final reduced model are shown below*
+```{r reduced Multi-variate model}
+#step-wise removal of non-significant terms, ended up removing all interaction terms and Location
+modelA_redux <- coxph(Surv(Days_post_infection,Status)~ Condition + SeasonDay, data=Adult_Uninfected)
+summary(modelA_redux)
+anova(modelA_redux)
+```
+  
+  + ANOVA - Reduced **multivariable** analysis
+```{r Reduced multivariable model - anova - Sm}
+#anova
+t <- anova(modelA_redux)
+
+#set some formatting before using cable (num digits to display, bolding based on significance)
+t[,4] = round(t[,4], digits = 10)
+row.names(t) = cell_spec(row.names(t), bold = ifelse(t[,4] < 0.05, "TRUE", "FALSE"))
+t[,4] = cell_spec(t[,4], bold = ifelse(t[,4] < 0.05, "TRUE", "FALSE"))
+
+#make nice table with kable
+kbl(t, escape = FALSE, digits = c(2, 2, 2, 3)) %>%
+  kable_classic(full_width = F, html_font = "Cambria", position = "center")
+```  
+
+  + Checking model assumptions (beta coef = flat) - reduced **multivariable**
+```{r Do Condition and Season Day Impact Survival Of Serratia - assumptions (redux), fig.height = 3, fid.width = 3.5}
+#Check to see how the model looks - does it fulfill assumptions
+fitA_redux<-cox.zph(modelA_redux, transform="km", global=TRUE)
+print(fitA_redux)
+plot(fitA_redux)
+```
+
+ + Comparison of reduced model to full model
+```{r Does removal of non-significant interaction terms weaken the model}
+anova(modelA, modelA_redux) #does streamlining model significantly weaken model? No.
+```
+
+ + CONCLUSION
+    + Reducing the model does not weaken the fit
+
+## Plots
+
+```{r plot parameters}
+legend_size <- 1.3
+```
+
+### **Condition**
+
+```{r make Condition quantiles}
+Adult_Uninfected$Conditionquantile<-split_quantile(x = Adult_Uninfected$Condition, type = 4)
+```
+
+ + Sample size: `r kbl(summarise(group_by(Adult_Uninfected, Conditionquantile), n=length(Conditionquantile))) %>% kable_classic(full_width = F, html_font = "Cambria", position = "center")`
+ 
+  + Plot
+```{r log(Condition) graph}
+#png(file="Survival_Conditionquantile.png",width=2972,height=1960,units = "px", res=400)
+par(mar=c(6,6,1,1)) #sets the margins around the graph so there is room for the labels
+plot(survfit(Surv(Days_post_infection,Status)~Conditionquantile, data=Adult_Uninfected),
+     col=c("#B7D7D4", "#86BCB6", "#499894","#306462"),
+     lty=c(3, 2, 5, 1),
+     lwd=5, #line width
+     yaxt='n',
+     xaxt='n',
+     ylab="Proportion alive", #label for the y-axis
+     xlab="Days post-treatment", #label for the x-axis
+     cex.lab=2.5, #font size ofange of the x-axis
+     xaxs='i',
+     xlim=c(0,20)) #makes the data flush with the axis
+axis(2, #left side
+     las=3, #perpendicular to the axis
+     cex.axis=2, #font size
+     lwd=5) #line width
+axis(1, #bottom of the graph
+     cex.axis=2, #font size
+     lwd=5) #line width
+box(lwd=5)
+
+legend("topright", bty="n" , c("Condition Q1 (n=56)","Condition Q2 (n=56)","Condition Q3 (n=55)","Condition Q4 (n=56)"),col=c("#B7D7D4", "#86BCB6", "#499894","#306462"), lty=c(3, 2, 5, 1),lwd=5, cex=legend_size)
+
+#dev.off()
+```
+
+### **SeasonDay** 
+  + Sorted into two groups - early (collections on July 9, 13, 15, 17 - Season Days 1-18), late (collections on July 22, 23, 30, 31, 36 - Season Days 19-36)
+  + Couldn't do three groups because last two collections were truncated due to RNA collection.
+
+```{r SD categories}
+Adult_Uninfected$SDcategory<- cut(Adult_Uninfected$SeasonDay, breaks = c(5, 18, Inf))
+```
+
+ + Sample size: `r kbl(summarise(group_by(Adult_Uninfected, SDcategory), n=length(SDcategory))) %>% kable_classic(full_width = F, html_font = "Cambria", position = "center")`
+ 
+  + Plot
+```{r SD graphs}
+#png(file="Survival_SD.png",width=2972,height=1960,units = "px", res=400)
+par(mar=c(6,6,1,1)) #sets the margins around the graph so there is room for the labels
+plot(survfit(Surv(Days_post_infection,Status)~SDcategory, data=Adult_Uninfected),
+     col=c("#306462","#86BCB6"),
+     lty=c(1, 3),
+     lwd=5, #line width
+     yaxt='n',
+     xaxt='n',
+     ylab="Proportion alive", #label for the y-axis
+     xlab="Days post-treatment", #label for the x-axis
+     cex.lab=2.5, #font size ofange of the x-axis
+     xaxs='i',
+     xlim=c(0,20)) #makes the data flush with the axis
+axis(2, #left side
+     las=3, #perpendicular to the axis
+     cex.axis=2, #font size
+     lwd=5) #line width
+axis(1, #bottom of the graph
+     cex.axis=2, #font size
+     lwd=5) #line width
+box(lwd=5)
+
+legend("topright", bty="n" , c("Early (n=118)","Late (n=105)"),col=c( "#306462","#86BCB6"), lty=c( 1,  3),lwd=5, cex=legend_size)
+
+#dev.off()
+
+```
+
+### **Location** 
+
+ + There are very few fireflies from the Bucknell University Farm that are uninfected (n=14). This likely limits our ability to detect location effects, although our stats could still detect differences between other locations which are well represented.
+
+ + Sample size: `r kbl(summarise(group_by(Adult_Uninfected, Location), n=length(Location))) %>% kable_classic(full_width = F, html_font = "Cambria", position = "center")`
+ 
+  + Plot
+```{r Location graph}
+
+#png(file="Survival_Location.png",width=2972,height=1960,units = "px", res=400)
+par(mar=c(6,6,1,1)) #sets the margins around the graph so there is room for the labels
+plot(survfit(Surv(Days_post_infection,Status)~Location, data=Adult_Uninfected),
+     col=c("#4E79A7","#F28E2B","#E15759"),
+     lty=c(1, 2,3),
+     lwd=5, #line width
+     yaxt='n',
+     xaxt='n',
+     ylab="Proportion alive", #label for the y-axis
+     xlab="Days post-treatment", #label for the x-axis
+     cex.lab=2.5, #font size ofange of the x-axis
+     xaxs='i',
+     xlim=c(0,20)) #makes the data flush with the axis
+axis(2, #left side
+     las=3, #perpendicular to the axis
+     cex.axis=2, #font size
+     lwd=5) #line width
+axis(1, #bottom of the graph
+     cex.axis=2, #font size
+     lwd=5) #line width
+box(lwd=5)
+
+legend("topright", bty="n" , c("BNA (n=101)","BUF (n=14)", "FDBCC (n=108)"),col=c( "#4E79A7","#F28E2B","#E15759"), lty=c( 1,  2,3),lwd=5, cex=legend_size)
+
+#dev.off()
+
+```
+
+### **Treatment**
+
+ + Sample size: `r kbl(summarise(group_by(Adult_Uninfected, Treatment), n=length(Treatment))) %>% kable_classic(full_width = F, html_font = "Cambria", position = "center")`
+ 
+ + Plot
+```{r Treatment graphs}
+#png(file="Survival_Treatment.png",width=2972,height=1960,units = "px", res=400)
+par(mar=c(6,6,1,1)) #sets the margins around the graph so there is room for the labels
+plot(survfit(Surv(Days_post_infection,Status)~Treatment, data=Adult_Uninfected),
+     col=c("#306462","#86BCB6"),
+     lty=c(1, 3),
+     lwd=5, #line width
+     yaxt='n',
+     xaxt='n',
+     ylab="Proportion alive", #label for the y-axis
+     xlab="Days post-treatment", #label for the x-axis
+     cex.lab=2.5, #font size of range of the x-axis
+     xaxs='i',
+     xlim=c(0,20)) #makes the data flush with the axis
+axis(2, #left side
+     las=3, #perpendicular to the axis
+     cex.axis=2, #font size
+     lwd=5) #line width
+axis(1, #bottom of the graph
+     cex.axis=2, #font size
+     lwd=5) #line width
+box(lwd=5)
+
+legend("topright", bty="n" , c("Uninjected (n=53)","Sterile saline (n=170)"),col=c( "#306462","#86BCB6"), lty=c( 1,  3),lwd=5, cex=legend_size)
+
+#dev.off()
+```
+
+### Multipanel plots for main text
+
+ + Note: gave up on trying to make this pretty in R -> exported to pdf and modified in Adobe Illustrator. 
+ 
+```{r uninfected multipanel plot for maintext, message = FALSE}
+#make big plot with table
+#read in kable table as image
+a <- ggdraw() +
+  draw_image("Survival_Conditionquantile.png")
+
+b <- ggdraw() +
+  draw_image("Survival_SD.png")
+
+#c <- ggdraw() +
+#  draw_image("Survival_Location.png")
+
+#d <- ggdraw() +
+#  draw_image("Survival_Treatment.png")
+
+#using patchwork
+#get the plots together
+
+multiplot <- a + b
+w <- multiplot + 
+  plot_annotation(tag_levels = 'A')
+#ggsave("Fig.2.Uninfected_analysis_row_unedited_6_8_22.pdf", w, device = "pdf")
+
+w
+```
+
+## Calculating Hazard rates for different uninfected firefly classes
+ + Extract the coefficients and define the function to compare hazard rates among two exemplar fireflies
+```{r uninfected hazard rates}
+
+condition_coef <- modelA_redux$coefficients[1]
+seasonday_coef <- modelA_redux$coefficients[2]
+
+calc_HR_uninfected <- function(avg_cond1, SD1, avg_cond2, SD2){
+  
+  H_for_firefly1 = exp(condition_coef*avg_cond1 + seasonday_coef*SD1)
+  H_for_firefly2 = exp(condition_coef*avg_cond2 + seasonday_coef*SD2)
+  HR = H_for_firefly2/H_for_firefly1
+  names(HR) <- NULL
+  return(HR)
+}
+
+```
+
+  + Hazard for fireflies in better (Q4) vs worse condition (Q1)
+```{r HR better worse condition}
+good_condition_ff <- median(Adult_Uninfected$Condition[which(Adult_Uninfected$Conditionquantile == 4)])
+sad_condition_ff <- median(Adult_Uninfected$Condition[which(Adult_Uninfected$Conditionquantile == 1)])
+
+
+calc_HR_uninfected(avg_cond1 = good_condition_ff, 
+                   SD1 = 20, 
+                   avg_cond2 = sad_condition_ff, 
+                   SD2 = 20)
+
+```
+
+  + Hazard for fireflies comparing mid-early season captured fireflies (Day 10) to mid-late (Day 20)
+```{r calc HR for Season Day}
+#calc for PBS vs uninj, mortality in first week
+calc_HR_uninfected(avg_cond1 = 0.01, 
+                   SD1 = 10, 
+                   avg_cond2 = 0.01, 
+                   SD2 = 20)
+```
+
+---
+
+## Session info
+```{r session info}
+sessionInfo()
+```
