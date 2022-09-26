@@ -9,7 +9,6 @@ output:
     toc: TRUE
     toc_float: TRUE
     toc_depth: 6
-    theme: cerulean
     code_folding: hide
 ---
 

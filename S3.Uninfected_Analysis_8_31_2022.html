@@ -1,0 +1,2093 @@
+<!DOCTYPE html>
+
+<html>
+
+<head>
+
+<meta charset="utf-8" />
+<meta name="generator" content="pandoc" />
+<meta http-equiv="X-UA-Compatible" content="IE=EDGE" />
+
+
+<meta name="author" content="Moria Chambers + Sarah Lower" />
+
+<meta name="date" content="2022-09-26" />
+
+<title>P. pyralis adult infection survival: overall survival + uninfected firefly analysis</title>
+
+<script src="site_libs/header-attrs-2.16/header-attrs.js"></script>
+<script src="site_libs/jquery-3.6.0/jquery-3.6.0.min.js"></script>
+<meta name="viewport" content="width=device-width, initial-scale=1" />
+<link href="site_libs/bootstrap-3.3.5/css/yeti.min.css" rel="stylesheet" />
+<script src="site_libs/bootstrap-3.3.5/js/bootstrap.min.js"></script>
+<script src="site_libs/bootstrap-3.3.5/shim/html5shiv.min.js"></script>
+<script src="site_libs/bootstrap-3.3.5/shim/respond.min.js"></script>
+<style>h1 {font-size: 34px;}
+       h1.title {font-size: 38px;}
+       h2 {font-size: 30px;}
+       h3 {font-size: 24px;}
+       h4 {font-size: 18px;}
+       h5 {font-size: 16px;}
+       h6 {font-size: 12px;}
+       code {color: inherit; background-color: rgba(0, 0, 0, 0.04);}
+       pre:not([class]) { background-color: white }</style>
+<script src="site_libs/jqueryui-1.11.4/jquery-ui.min.js"></script>
+<link href="site_libs/tocify-1.9.1/jquery.tocify.css" rel="stylesheet" />
+<script src="site_libs/tocify-1.9.1/jquery.tocify.js"></script>
+<script src="site_libs/navigation-1.1/tabsets.js"></script>
+<script src="site_libs/navigation-1.1/codefolding.js"></script>
+<link href="site_libs/highlightjs-9.12.0/textmate.css" rel="stylesheet" />
+<script src="site_libs/highlightjs-9.12.0/highlight.js"></script>
+<script src="site_libs/kePrint-0.0.1/kePrint.js"></script>
+<link href="site_libs/lightable-0.0.1/lightable.css" rel="stylesheet" />
+
+<style type="text/css">
+  code{white-space: pre-wrap;}
+  span.smallcaps{font-variant: small-caps;}
+  span.underline{text-decoration: underline;}
+  div.column{display: inline-block; vertical-align: top; width: 50%;}
+  div.hanging-indent{margin-left: 1.5em; text-indent: -1.5em;}
+  ul.task-list{list-style: none;}
+    </style>
+
+<style type="text/css">code{white-space: pre;}</style>
+<script type="text/javascript">
+if (window.hljs) {
+  hljs.configure({languages: []});
+  hljs.initHighlightingOnLoad();
+  if (document.readyState && document.readyState === "complete") {
+    window.setTimeout(function() { hljs.initHighlighting(); }, 0);
+  }
+}
+</script>
+
+
+
+
+
+
+
+
+
+<style type = "text/css">
+.main-container {
+  max-width: 940px;
+  margin-left: auto;
+  margin-right: auto;
+}
+img {
+  max-width:100%;
+}
+.tabbed-pane {
+  padding-top: 12px;
+}
+.html-widget {
+  margin-bottom: 20px;
+}
+button.code-folding-btn:focus {
+  outline: none;
+}
+summary {
+  display: list-item;
+}
+details > summary > p:only-child {
+  display: inline;
+}
+pre code {
+  padding: 0;
+}
+</style>
+
+
+<style type="text/css">
+.dropdown-submenu {
+  position: relative;
+}
+.dropdown-submenu>.dropdown-menu {
+  top: 0;
+  left: 100%;
+  margin-top: -6px;
+  margin-left: -1px;
+  border-radius: 0 6px 6px 6px;
+}
+.dropdown-submenu:hover>.dropdown-menu {
+  display: block;
+}
+.dropdown-submenu>a:after {
+  display: block;
+  content: " ";
+  float: right;
+  width: 0;
+  height: 0;
+  border-color: transparent;
+  border-style: solid;
+  border-width: 5px 0 5px 5px;
+  border-left-color: #cccccc;
+  margin-top: 5px;
+  margin-right: -10px;
+}
+.dropdown-submenu:hover>a:after {
+  border-left-color: #adb5bd;
+}
+.dropdown-submenu.pull-left {
+  float: none;
+}
+.dropdown-submenu.pull-left>.dropdown-menu {
+  left: -100%;
+  margin-left: 10px;
+  border-radius: 6px 0 6px 6px;
+}
+</style>
+
+<script type="text/javascript">
+// manage active state of menu based on current page
+$(document).ready(function () {
+  // active menu anchor
+  href = window.location.pathname
+  href = href.substr(href.lastIndexOf('/') + 1)
+  if (href === "")
+    href = "index.html";
+  var menuAnchor = $('a[href="' + href + '"]');
+
+  // mark the anchor link active (and if it's in a dropdown, also mark that active)
+  var dropdown = menuAnchor.closest('li.dropdown');
+  if (window.bootstrap) { // Bootstrap 4+
+    menuAnchor.addClass('active');
+    dropdown.find('> .dropdown-toggle').addClass('active');
+  } else { // Bootstrap 3
+    menuAnchor.parent().addClass('active');
+    dropdown.addClass('active');
+  }
+
+  // Navbar adjustments
+  var navHeight = $(".navbar").first().height() + 15;
+  var style = document.createElement('style');
+  var pt = "padding-top: " + navHeight + "px; ";
+  var mt = "margin-top: -" + navHeight + "px; ";
+  var css = "";
+  // offset scroll position for anchor links (for fixed navbar)
+  for (var i = 1; i <= 6; i++) {
+    css += ".section h" + i + "{ " + pt + mt + "}\n";
+  }
+  style.innerHTML = "body {" + pt + "padding-bottom: 40px; }\n" + css;
+  document.head.appendChild(style);
+});
+</script>
+
+<!-- tabsets -->
+
+<style type="text/css">
+.tabset-dropdown > .nav-tabs {
+  display: inline-table;
+  max-height: 500px;
+  min-height: 44px;
+  overflow-y: auto;
+  border: 1px solid #ddd;
+  border-radius: 4px;
+}
+
+.tabset-dropdown > .nav-tabs > li.active:before {
+  content: "";
+  font-family: 'Glyphicons Halflings';
+  display: inline-block;
+  padding: 10px;
+  border-right: 1px solid #ddd;
+}
+
+.tabset-dropdown > .nav-tabs.nav-tabs-open > li.active:before {
+  content: "&#xe258;";
+  border: none;
+}
+
+.tabset-dropdown > .nav-tabs.nav-tabs-open:before {
+  content: "";
+  font-family: 'Glyphicons Halflings';
+  display: inline-block;
+  padding: 10px;
+  border-right: 1px solid #ddd;
+}
+
+.tabset-dropdown > .nav-tabs > li.active {
+  display: block;
+}
+
+.tabset-dropdown > .nav-tabs > li > a,
+.tabset-dropdown > .nav-tabs > li > a:focus,
+.tabset-dropdown > .nav-tabs > li > a:hover {
+  border: none;
+  display: inline-block;
+  border-radius: 4px;
+  background-color: transparent;
+}
+
+.tabset-dropdown > .nav-tabs.nav-tabs-open > li {
+  display: block;
+  float: none;
+}
+
+.tabset-dropdown > .nav-tabs > li {
+  display: none;
+}
+</style>
+
+<!-- code folding -->
+<style type="text/css">
+.code-folding-btn { margin-bottom: 4px; }
+</style>
+
+
+
+<style type="text/css">
+
+#TOC {
+  margin: 25px 0px 20px 0px;
+}
+@media (max-width: 768px) {
+#TOC {
+  position: relative;
+  width: 100%;
+}
+}
+
+@media print {
+.toc-content {
+  /* see https://github.com/w3c/csswg-drafts/issues/4434 */
+  float: right;
+}
+}
+
+.toc-content {
+  padding-left: 30px;
+  padding-right: 40px;
+}
+
+div.main-container {
+  max-width: 1200px;
+}
+
+div.tocify {
+  width: 20%;
+  max-width: 260px;
+  max-height: 85%;
+}
+
+@media (min-width: 768px) and (max-width: 991px) {
+  div.tocify {
+    width: 25%;
+  }
+}
+
+@media (max-width: 767px) {
+  div.tocify {
+    width: 100%;
+    max-width: none;
+  }
+}
+
+.tocify ul, .tocify li {
+  line-height: 20px;
+}
+
+.tocify-subheader .tocify-item {
+  font-size: 0.90em;
+}
+
+.tocify .list-group-item {
+  border-radius: 0px;
+}
+
+
+</style>
+
+
+
+</head>
+
+<body>
+
+
+<div class="container-fluid main-container">
+
+
+<!-- setup 3col/9col grid for toc_float and main content  -->
+<div class="row">
+<div class="col-xs-12 col-sm-4 col-md-3">
+<div id="TOC" class="tocify">
+</div>
+</div>
+
+<div class="toc-content col-xs-12 col-sm-8 col-md-9">
+
+
+
+
+<div class="navbar navbar-default  navbar-fixed-top" role="navigation">
+  <div class="container">
+    <div class="navbar-header">
+      <button type="button" class="navbar-toggle collapsed" data-toggle="collapse" data-bs-toggle="collapse" data-target="#navbar" data-bs-target="#navbar">
+        <span class="icon-bar"></span>
+        <span class="icon-bar"></span>
+        <span class="icon-bar"></span>
+      </button>
+      <a class="navbar-brand" href="index.html">P. pyralis adult survival infection data analysis</a>
+    </div>
+    <div id="navbar" class="navbar-collapse collapse">
+      <ul class="nav navbar-nav">
+        <li>
+  <a href="index.html">Home</a>
+</li>
+<li>
+  <a href="S1.EL_Mass_relationships_6_14_22.html">S1.Elytron length and mass relationships</a>
+</li>
+<li>
+  <a href="S2.Exploring_linearity_condition_5_13_22.html">S2.Exploring linearity of condition</a>
+</li>
+<li>
+  <a href="S3.Uninfected_Analysis_8_31_2022.html">S3.Uninfected firefly analysis</a>
+</li>
+<li>
+  <a href="S4.Infected_Analysis_8_31_22.html">S4.Infected firefly analysis</a>
+</li>
+      </ul>
+      <ul class="nav navbar-nav navbar-right">
+        
+      </ul>
+    </div><!--/.nav-collapse -->
+  </div><!--/.container -->
+</div><!--/.navbar -->
+
+<div id="header">
+
+<div class="btn-group pull-right float-right">
+<button type="button" class="btn btn-default btn-xs btn-secondary btn-sm dropdown-toggle" data-toggle="dropdown" data-bs-toggle="dropdown" aria-haspopup="true" aria-expanded="false"><span>Code</span> <span class="caret"></span></button>
+<ul class="dropdown-menu dropdown-menu-right" style="min-width: 50px;">
+<li><a id="rmd-show-all-code" href="#">Show All Code</a></li>
+<li><a id="rmd-hide-all-code" href="#">Hide All Code</a></li>
+</ul>
+</div>
+
+
+
+<h1 class="title toc-ignore">P. pyralis adult infection survival:
+overall survival + uninfected firefly analysis</h1>
+<h4 class="author">Moria Chambers + Sarah Lower</h4>
+<h4 class="date">2022-09-26</h4>
+
+</div>
+
+
+<div
+id="goal-generate-overall-summary-statistics-for-all-fireflies-in-the-experiment-and-test-whether-in-the-absence-of-infection-condition-season-location-or-wounding-injection-with-sterile-pbs-affects-survival-of-p.-pyralis-fireflies"
+class="section level1">
+<h1><strong>Goal: Generate overall summary statistics for all fireflies
+in the experiment and test whether, in the ABSENCE of infection,
+condition, season, location, or wounding (injection with sterile PBS)
+affects survival of <em>P. pyralis</em> fireflies</strong></h1>
+<p><em>Study design:</em></p>
+<p><img src="Experimental_design.png" /></p>
+<hr />
+<div id="step-1-ready-the-workspace" class="section level2">
+<h2>Step 1: Ready the workspace</h2>
+<pre class="r"><code>#clear all inputs
+rm(list = ls())
+
+#Check for necessary packages
+list.of.packages &lt;- c(&quot;survival&quot;,
+                      &quot;survminer&quot;,
+                      &quot;ggplot2&quot;, 
+                      &quot;tidyr&quot;,
+                      &quot;dplyr&quot;,
+                      &quot;Hmisc&quot;,
+                      &quot;qqplotr&quot;,
+                      &quot;ggthemes&quot;,
+                      &quot;fabricatr&quot;,
+                      &quot;gridExtra&quot;,
+                      &quot;grid&quot;,
+                      &quot;kableExtra&quot;,
+                      &quot;sjPlot&quot;,
+                      &quot;cowplot&quot;,
+                      &quot;ggpubr&quot;,
+                      &quot;patchwork&quot;,
+                      &quot;magick&quot;, #so you can use the savekable function
+                      &quot;webshot&quot;, #so you can use the savekable function
+                      &quot;lme4&quot;,
+                      &quot;RcppEigen&quot;)
+
+#should install packages that you don&#39;t have
+new.packages &lt;- list.of.packages[!(list.of.packages %in% installed.packages()[,&quot;Package&quot;])]
+if(length(new.packages)) install.packages(new.packages)
+
+#Load the package that contains the Cox Propotional Hazard Function
+library(survival)
+library(ggplot2)
+library(tidyr)
+library(dplyr)
+library(Hmisc)
+library(qqplotr)
+library(ggthemes)
+library(fabricatr)
+library(survminer)
+library(gridExtra)
+library(grid)
+library(kableExtra)
+library(sjPlot)
+library(cowplot)
+library(ggpubr)
+library(patchwork)</code></pre>
+<hr />
+</div>
+<div id="step-2-import-the-data" class="section level2">
+<h2>Step 2: Import the data</h2>
+<pre class="r"><code>#This imports the data from a CSV file and creates the data frame PrTC
+Adult_Final &lt;- read.table(&quot;2021_Adult_Firefly_Survival_binned3.csv&quot;, header=TRUE, sep=&quot;,&quot;, dec=&quot;.&quot;,na.strings=&quot;.&quot;) 
+
+#Create condition variable
+Adult_Final$Condition &lt;- Adult_Final$Mass/Adult_Final$ElytralLength
+
+#Subset the data to only include uninfected controls
+Adult_Uninfected&lt;-subset(Adult_Final, DoseBacteriaNumber==&quot;0&quot;)
+#nrow(Adult_Uninfected)
+
+#This sets up the color palette using tableau20: https://jrnold.github.io/ggthemes/reference/tableau_color_pal.html
+site_colors &lt;- c(&quot;USA: Montour Co, Bucknell Natural Area&quot; = &quot;#4E79A7&quot;, 
+                 &quot;USA: Union Co, Bucknell Farm&quot; = &quot;#F28E2B&quot;, 
+                 &quot;USA: Union Co, Bucknell Ropes Course&quot; = &quot;#E15759&quot;)</code></pre>
+<hr />
+</div>
+<div id="step-3-overall-survival-summary-statistics-and-plots"
+class="section level2">
+<h2>Step 3: Overall survival summary statistics and plots</h2>
+<div
+id="q1.-what-does-the-distribution-of-survival-look-like-for-fireflies-overall"
+class="section level3">
+<h3>Q1. What does the distribution of survival look like for fireflies
+overall?</h3>
+<ul>
+<li>The longest-lived firefly lived 24 days and was in the 06_Ps_0.1
+treatment</li>
+</ul>
+<p><em>Abbreviations</em>:</p>
+<ul>
+<li>Un = uninjected</li>
+<li>PBS = phosphate buffered saline injection (sterile)</li>
+<li>Pa = <em>Pseudomonas aeruginosa</em> PA01</li>
+<li>Sm = <em>Serratia marcescens</em> DB1140</li>
+<li>Pr = <em>Providencia rettgeri</em></li>
+<li>Ps = <em>Providencia sneebia</em></li>
+<li>Ef = <em>Enterococcus faecalis</em></li>
+<li>Abs600nm = optical absorbance at 600 nm (a measure of dose)</li>
+<li>Control = uninjected + PBS</li>
+</ul>
+<pre class="r"><code>grouped &lt;- group_by(Adult_Final, Treatment)
+
+t &lt;- summarise(grouped, n=length(Days_post_infection), Median=median(Days_post_infection), Max=max(Days_post_infection), Min=min(Days_post_infection))
+
+t$Treatment &lt;- c(&quot;Un&quot;, 
+                 &quot;PBS&quot;, 
+                 &quot;Pa Abs600nm 0.1&quot;, 
+                 &quot;Pa Abs600nm 1.0&quot;,
+                 &quot;Pa Abs600nm 5.0&quot;,
+                 &quot;Sm Abs600nm 0.1&quot;,
+                 &quot;Sm Abs600nm 1.0&quot;,
+                 &quot;Sm Abs600nm 5.0&quot;,
+                 &quot;Pr Abs600nm 0.1&quot;,
+                 &quot;Pr Abs600nm 1.0&quot;,
+                 &quot;Pr Abs600nm 5.0&quot;,
+                 &quot;Ps Abs600nm 0.1&quot;,
+                 &quot;Ps Abs600nm 1.0&quot;,
+                 &quot;Ps Abs600nm 5.0&quot;,
+                 &quot;Ef Abs600nm 0.1&quot;,
+                 &quot;Ef Abs600nm 1.0&quot;,
+                 &quot;Ef Abs600nm 5.0&quot;)
+
+kbl(t) %&gt;%
+  kable_classic(full_width = F, html_font = &quot;Cambria&quot;, position = &quot;center&quot;)</code></pre>
+<table class=" lightable-classic" style="font-family: Cambria; width: auto !important; margin-left: auto; margin-right: auto;">
+<thead>
+<tr>
+<th style="text-align:left;">
+Treatment
+</th>
+<th style="text-align:right;">
+n
+</th>
+<th style="text-align:right;">
+Median
+</th>
+<th style="text-align:right;">
+Max
+</th>
+<th style="text-align:right;">
+Min
+</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td style="text-align:left;">
+Un
+</td>
+<td style="text-align:right;">
+53
+</td>
+<td style="text-align:right;">
+9.0
+</td>
+<td style="text-align:right;">
+15
+</td>
+<td style="text-align:right;">
+2
+</td>
+</tr>
+<tr>
+<td style="text-align:left;">
+PBS
+</td>
+<td style="text-align:right;">
+170
+</td>
+<td style="text-align:right;">
+5.0
+</td>
+<td style="text-align:right;">
+19
+</td>
+<td style="text-align:right;">
+1
+</td>
+</tr>
+<tr>
+<td style="text-align:left;">
+Pa Abs600nm 0.1
+</td>
+<td style="text-align:right;">
+22
+</td>
+<td style="text-align:right;">
+9.0
+</td>
+<td style="text-align:right;">
+23
+</td>
+<td style="text-align:right;">
+2
+</td>
+</tr>
+<tr>
+<td style="text-align:left;">
+Pa Abs600nm 1.0
+</td>
+<td style="text-align:right;">
+21
+</td>
+<td style="text-align:right;">
+7.0
+</td>
+<td style="text-align:right;">
+16
+</td>
+<td style="text-align:right;">
+2
+</td>
+</tr>
+<tr>
+<td style="text-align:left;">
+Pa Abs600nm 5.0
+</td>
+<td style="text-align:right;">
+21
+</td>
+<td style="text-align:right;">
+6.0
+</td>
+<td style="text-align:right;">
+18
+</td>
+<td style="text-align:right;">
+1
+</td>
+</tr>
+<tr>
+<td style="text-align:left;">
+Sm Abs600nm 0.1
+</td>
+<td style="text-align:right;">
+35
+</td>
+<td style="text-align:right;">
+9.0
+</td>
+<td style="text-align:right;">
+22
+</td>
+<td style="text-align:right;">
+1
+</td>
+</tr>
+<tr>
+<td style="text-align:left;">
+Sm Abs600nm 1.0
+</td>
+<td style="text-align:right;">
+59
+</td>
+<td style="text-align:right;">
+6.0
+</td>
+<td style="text-align:right;">
+18
+</td>
+<td style="text-align:right;">
+1
+</td>
+</tr>
+<tr>
+<td style="text-align:left;">
+Sm Abs600nm 5.0
+</td>
+<td style="text-align:right;">
+68
+</td>
+<td style="text-align:right;">
+2.0
+</td>
+<td style="text-align:right;">
+16
+</td>
+<td style="text-align:right;">
+1
+</td>
+</tr>
+<tr>
+<td style="text-align:left;">
+Pr Abs600nm 0.1
+</td>
+<td style="text-align:right;">
+35
+</td>
+<td style="text-align:right;">
+8.0
+</td>
+<td style="text-align:right;">
+21
+</td>
+<td style="text-align:right;">
+2
+</td>
+</tr>
+<tr>
+<td style="text-align:left;">
+Pr Abs600nm 1.0
+</td>
+<td style="text-align:right;">
+51
+</td>
+<td style="text-align:right;">
+4.0
+</td>
+<td style="text-align:right;">
+20
+</td>
+<td style="text-align:right;">
+1
+</td>
+</tr>
+<tr>
+<td style="text-align:left;">
+Pr Abs600nm 5.0
+</td>
+<td style="text-align:right;">
+34
+</td>
+<td style="text-align:right;">
+5.0
+</td>
+<td style="text-align:right;">
+18
+</td>
+<td style="text-align:right;">
+1
+</td>
+</tr>
+<tr>
+<td style="text-align:left;">
+Ps Abs600nm 0.1
+</td>
+<td style="text-align:right;">
+41
+</td>
+<td style="text-align:right;">
+9.0
+</td>
+<td style="text-align:right;">
+24
+</td>
+<td style="text-align:right;">
+2
+</td>
+</tr>
+<tr>
+<td style="text-align:left;">
+Ps Abs600nm 1.0
+</td>
+<td style="text-align:right;">
+40
+</td>
+<td style="text-align:right;">
+6.5
+</td>
+<td style="text-align:right;">
+17
+</td>
+<td style="text-align:right;">
+1
+</td>
+</tr>
+<tr>
+<td style="text-align:left;">
+Ps Abs600nm 5.0
+</td>
+<td style="text-align:right;">
+38
+</td>
+<td style="text-align:right;">
+6.5
+</td>
+<td style="text-align:right;">
+16
+</td>
+<td style="text-align:right;">
+1
+</td>
+</tr>
+<tr>
+<td style="text-align:left;">
+Ef Abs600nm 0.1
+</td>
+<td style="text-align:right;">
+36
+</td>
+<td style="text-align:right;">
+7.0
+</td>
+<td style="text-align:right;">
+20
+</td>
+<td style="text-align:right;">
+1
+</td>
+</tr>
+<tr>
+<td style="text-align:left;">
+Ef Abs600nm 1.0
+</td>
+<td style="text-align:right;">
+40
+</td>
+<td style="text-align:right;">
+6.0
+</td>
+<td style="text-align:right;">
+17
+</td>
+<td style="text-align:right;">
+1
+</td>
+</tr>
+<tr>
+<td style="text-align:left;">
+Ef Abs600nm 5.0
+</td>
+<td style="text-align:right;">
+74
+</td>
+<td style="text-align:right;">
+3.5
+</td>
+<td style="text-align:right;">
+18
+</td>
+<td style="text-align:right;">
+1
+</td>
+</tr>
+</tbody>
+</table>
+<ul>
+<li>Distributions</li>
+</ul>
+<pre class="r"><code># New facet label names for dose variable (as a factor)
+Adult_Final$DoseF &lt;- factor(Adult_Final$Dose, levels = c(&quot;NA&quot;, &quot;0.1&quot;, &quot;1&quot;, &quot;5&quot;), labels = c(&quot;Control&quot;, &quot;Abs600nm 0.1&quot;, &quot;Abs600nm 1.0&quot;, &quot;Abs600nm 5.0&quot;))
+
+# New facet label names for bacterial species variable (as a factor)
+Adult_Final$BacSpF &lt;- factor(Adult_Final$BacterialSpecies, levels = c(&quot;01_uninjected&quot;, &quot;02_PBS&quot;, &quot;03_Paerug&quot;, &quot;04_Smarc&quot;, &quot;05_Prett&quot;, &quot;06_Psneeb&quot;, &quot;07_Efaec&quot;), labels = c(&quot;Un&quot;, &quot;PBS&quot;, &quot;Pa&quot;, &quot;Sm&quot;, &quot;Pr&quot;, &quot;Ps&quot;, &quot;Ef&quot;))
+
+ggplot(Adult_Final, aes(x=Days_post_infection, fill=Treatment)) +
+  geom_histogram() +
+  xlab(&quot;Days post infection&quot;) +
+  ylab(&quot;N fireflies&quot;) +
+  theme(plot.title = element_text(hjust = 0.5), legend.position = &quot;none&quot;) +
+  facet_grid(BacSpF ~ DoseF)</code></pre>
+<p><img src="S3.Uninfected_Analysis_8_31_2022_files/figure-html/overall%20survival%20distributions-1.png" width="672" /></p>
+<hr />
+</div>
+</div>
+<div id="step-4-uninfected-analysis" class="section level2">
+<h2>Step 4: Uninfected analysis</h2>
+<div id="statistics" class="section level3">
+<h3>Statistics</h3>
+<ul>
+<li><p>The median <strong>uninfected</strong> adult lifespan was 7
+(range: 1 - 19)</p></li>
+<li><p>The longest-lived <strong>uninfected</strong> firefly lived 19
+days and was in the 02_PBS treatment</p></li>
+</ul>
+<div
+id="q1.-do-condition-season-day-collection-location-andor-type-of-control-treatment-impact-the-survival-of-uninfected-fireflies"
+class="section level4">
+<h4>Q1. Do condition, season day, collection location, and/or type of
+control treatment impact the survival of uninfected fireflies?</h4>
+<ul>
+<li>This dataset only includes control treatments (sterile PBS-injected
+and un-injected).</li>
+<li>Analysis using Treatment as the sole explanatory variable was
+conducted first
+<ul>
+<li>Treatment did not significantly impact mortality (p = 0.31)</li>
+<li>Revealed a time-dependence to treatment, however decided to proceed
+with multivariable analysis as the time-dependence was mostly seen after
+13 days and the rest was relatively flat.</li>
+</ul></li>
+<li>For Initial multivariable analysis:
+<ul>
+<li>Covariates were ordered from simplest to most complex</li>
+<li>Condition is included first in model as an indicator of energetic
+resources</li>
+<li>Season Day is included second as this is affected by development,
+age and other seasonal factors (temperature, humidity etc)</li>
+<li>Location is included next and all locations were sampled on
+different days</li>
+<li>Treatment is the final main effect</li>
+<li>Note: Only includes through second order interaction terms.</li>
+</ul></li>
+<li><strong>CONCLUSIONS</strong>:
+<ul>
+<li><strong>Condition</strong> and <strong>SeasonDay</strong> both have
+significant impact (p &lt;&lt; 0.0001 and p = 0.001 respectively).</li>
+<li>No other terms had a significant impact on survival.</li>
+<li>Notably <strong>Treatment</strong> was not significant (p = 0.30),
+suggesting that our injection technique does not cause significant
+damage to the fireflies.</li>
+<li>There was borderline time-dependence to the
+<strong>Condition:Treatment</strong> interaction, but visual examination
+of the residual plot revealed it to be relatively flat with the biggest
+deviation after 13 days post-treatment when the majority of fireflies
+had already died and numbers were smaller.</li>
+<li>In order to improve the predictive power for Hazard Ratios for
+particular conditions, we did a step-wise reduction of our multivariable
+Model</li>
+<li>Terms with the least impact on the log likelihood were removed, and
+then tested to see whether this significantly weakened the model by
+comparing it with the full model.</li>
+<li>We were able to reduce the model to only <strong>Condition</strong>
+and <strong>SeasonDay</strong> with no reduction in model fit (p =
+0.17)</li>
+<li><strong>Season Day</strong> had some time-dependence in the reduced
+model (p = 0.02), but examination of the residual plot showed that
+relation is overall very flat over time with only a mild deviation
+during the first day post-infeciton.</li>
+<li>Due to the significant effect of both <strong>Condition</strong> and
+<strong>SeasonDay</strong> on mortality in uninfected fireflies, we
+decided to include them as co-variates in the infection analysis.</li>
+<li>Despite no significant impact of sterile injection on mortality in
+either the treatment-only or multivariable model, we decided to use only
+sterile injected fireflies as visual inspection of the Kaplan-Mier plots
+suggests that they might have slightly different mortality
+kinetics.</li>
+</ul></li>
+</ul>
+<div id="analysis-of-treatment-only-wounding" class="section level5">
+<h5>Analysis of *<strong>Treatment only</strong> (wounding)</h5>
+<div id="unstratified-treatment-only-analysis" class="section level6">
+<h6>Unstratified *<strong>Treatment only</strong> analysis</h6>
+<ul>
+<li>Summary - <strong>Treatment only</strong> analysis</li>
+</ul>
+<pre class="r"><code>model_Treatment&lt;-coxph(Surv(Days_post_infection,Status)~ Treatment, data=Adult_Uninfected)
+summary(model_Treatment)</code></pre>
+<pre><code>## Call:
+## coxph(formula = Surv(Days_post_infection, Status) ~ Treatment, 
+##     data = Adult_Uninfected)
+## 
+##   n= 223, number of events= 182 
+## 
+##                    coef exp(coef) se(coef)     z Pr(&gt;|z|)
+## Treatment02_PBS  0.1670    1.1818   0.1655 1.009    0.313
+## 
+##                  exp(coef) exp(-coef) lower .95 upper .95
+## Treatment02_PBS      1.182     0.8462    0.8544     1.635
+## 
+## Concordance= 0.547  (se = 0.02 )
+## Likelihood ratio test= 1.04  on 1 df,   p=0.3
+## Wald test            = 1.02  on 1 df,   p=0.3
+## Score (logrank) test = 1.02  on 1 df,   p=0.3</code></pre>
+<ul>
+<li>ANOVA - <strong>Treatment only</strong> analysis</li>
+</ul>
+<pre class="r"><code>#anova
+t &lt;- anova(model_Treatment)
+
+#set some formatting before using cable (num digits to display, bolding based on significance)
+t[,4] = round(t[,4], digits = 10)
+row.names(t) = cell_spec(row.names(t), bold = ifelse(t[,4] &lt; 0.05, &quot;TRUE&quot;, &quot;FALSE&quot;))
+t[,4] = cell_spec(t[,4], bold = ifelse(t[,4] &lt; 0.05, &quot;TRUE&quot;, &quot;FALSE&quot;))
+
+#make nice table with kable
+kbl(t, escape = FALSE, digits = c(2, 2, 2, 3)) %&gt;%
+  kable_classic(full_width = F, html_font = &quot;Cambria&quot;, position = &quot;center&quot;)</code></pre>
+<table class=" lightable-classic" style="font-family: Cambria; width: auto !important; margin-left: auto; margin-right: auto;">
+<thead>
+<tr>
+<th style="text-align:left;">
+</th>
+<th style="text-align:right;">
+loglik
+</th>
+<th style="text-align:right;">
+Chisq
+</th>
+<th style="text-align:right;">
+Df
+</th>
+<th style="text-align:left;">
+Pr(&gt;|Chi|)
+</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td style="text-align:left;">
+<span style=" NA    ">NULL</span>
+</td>
+<td style="text-align:right;">
+-771.33
+</td>
+<td style="text-align:right;">
+NA
+</td>
+<td style="text-align:right;">
+NA
+</td>
+<td style="text-align:left;">
+<span style=" NA    ">NA</span>
+</td>
+</tr>
+<tr>
+<td style="text-align:left;">
+<span style="     ">Treatment</span>
+</td>
+<td style="text-align:right;">
+-770.81
+</td>
+<td style="text-align:right;">
+1.04
+</td>
+<td style="text-align:right;">
+1
+</td>
+<td style="text-align:left;">
+<span style="     ">0.3080428077</span>
+</td>
+</tr>
+</tbody>
+</table>
+<ul>
+<li>Checking model assumptions for Treatment (beta coef = flat) -
+<strong>Treatment only</strong> analysis</li>
+</ul>
+<pre class="r"><code>#check to see if there is time-dependence of treatment = yes! Need to stratify treatment. Split at d7 based plot of Beta(t) for treatment.
+fitTreatment_uni&lt;-cox.zph(model_Treatment, transform=&quot;km&quot;, global=TRUE)
+print(fitTreatment_uni)</code></pre>
+<pre><code>##           chisq df      p
+## Treatment  7.93  1 0.0049
+## GLOBAL     7.93  1 0.0049</code></pre>
+<pre class="r"><code>plot(fitTreatment_uni)</code></pre>
+<p><img src="S3.Uninfected_Analysis_8_31_2022_files/figure-html/Checking%20time-dependence%20of%20treatment-1.png" width="672" /></p>
+<ul>
+<li>CONCLUSION
+<ul>
+<li>Assumptions are NOT met, there is a time-dependence to treatment (p
+= 0.005) for uninfected fireflies. However, this is only an issue after
+about 13 days post-treatment, when the majority of the fireflies have
+died and numbers become small, so we decided to proceed with the
+multivariable analysis.</li>
+</ul></li>
+</ul>
+</div>
+</div>
+<div id="multivariable-analysis" class="section level5">
+<h5><strong>multivariable</strong> analysis</h5>
+<ul>
+<li>Summary - <strong>multivariable</strong> analysis</li>
+</ul>
+<pre class="r"><code>#set up the coxph model with second-order interactions
+modelA&lt;-coxph(Surv(Days_post_infection,Status)~ Condition + SeasonDay + Location + Treatment + Condition:SeasonDay + Condition:Location + Condition:Treatment + SeasonDay:Location + SeasonDay:Treatment + Location:Treatment, data=Adult_Uninfected)
+
+summary(modelA)</code></pre>
+<pre><code>## Call:
+## coxph(formula = Surv(Days_post_infection, Status) ~ Condition + 
+##     SeasonDay + Location + Treatment + Condition:SeasonDay + 
+##     Condition:Location + Condition:Treatment + SeasonDay:Location + 
+##     SeasonDay:Treatment + Location:Treatment, data = Adult_Uninfected)
+## 
+##   n= 223, number of events= 182 
+## 
+##                                                                      coef
+## Condition                                                      -2.075e+02
+## SeasonDay                                                       1.414e-01
+## LocationUSA: Union Co, Bucknell Farm                            7.631e-01
+## LocationUSA: Union Co, Bucknell Ropes Course                   -2.621e+00
+## Treatment02_PBS                                                 1.869e+00
+## Condition:SeasonDay                                            -2.425e+01
+## Condition:LocationUSA: Union Co, Bucknell Farm                 -6.877e+01
+## Condition:LocationUSA: Union Co, Bucknell Ropes Course          1.962e+02
+## Condition:Treatment02_PBS                                      -2.812e+02
+## SeasonDay:LocationUSA: Union Co, Bucknell Farm                  4.921e-02
+## SeasonDay:LocationUSA: Union Co, Bucknell Ropes Course          8.389e-02
+## SeasonDay:Treatment02_PBS                                      -5.437e-02
+## LocationUSA: Union Co, Bucknell Farm:Treatment02_PBS           -9.166e-01
+## LocationUSA: Union Co, Bucknell Ropes Course:Treatment02_PBS    3.954e-01
+##                                                                 exp(coef)
+## Condition                                                       7.606e-91
+## SeasonDay                                                       1.152e+00
+## LocationUSA: Union Co, Bucknell Farm                            2.145e+00
+## LocationUSA: Union Co, Bucknell Ropes Course                    7.274e-02
+## Treatment02_PBS                                                 6.484e+00
+## Condition:SeasonDay                                             2.953e-11
+## Condition:LocationUSA: Union Co, Bucknell Farm                  1.361e-30
+## Condition:LocationUSA: Union Co, Bucknell Ropes Course          1.547e+85
+## Condition:Treatment02_PBS                                      7.753e-123
+## SeasonDay:LocationUSA: Union Co, Bucknell Farm                  1.050e+00
+## SeasonDay:LocationUSA: Union Co, Bucknell Ropes Course          1.088e+00
+## SeasonDay:Treatment02_PBS                                       9.471e-01
+## LocationUSA: Union Co, Bucknell Farm:Treatment02_PBS            3.999e-01
+## LocationUSA: Union Co, Bucknell Ropes Course:Treatment02_PBS    1.485e+00
+##                                                                  se(coef)
+## Condition                                                       4.275e+02
+## SeasonDay                                                       9.838e-02
+## LocationUSA: Union Co, Bucknell Farm                            2.623e+00
+## LocationUSA: Union Co, Bucknell Ropes Course                    1.257e+00
+## Treatment02_PBS                                                 1.270e+00
+## Condition:SeasonDay                                             2.713e+01
+## Condition:LocationUSA: Union Co, Bucknell Farm                  6.128e+02
+## Condition:LocationUSA: Union Co, Bucknell Ropes Course          2.898e+02
+## Condition:Treatment02_PBS                                       2.847e+02
+## SeasonDay:LocationUSA: Union Co, Bucknell Farm                  4.898e-02
+## SeasonDay:LocationUSA: Union Co, Bucknell Ropes Course          4.059e-02
+## SeasonDay:Treatment02_PBS                                       4.412e-02
+## LocationUSA: Union Co, Bucknell Farm:Treatment02_PBS            1.017e+00
+## LocationUSA: Union Co, Bucknell Ropes Course:Treatment02_PBS    4.078e-01
+##                                                                    z Pr(&gt;|z|)  
+## Condition                                                     -0.485   0.6274  
+## SeasonDay                                                      1.437   0.1507  
+## LocationUSA: Union Co, Bucknell Farm                           0.291   0.7711  
+## LocationUSA: Union Co, Bucknell Ropes Course                  -2.086   0.0370 *
+## Treatment02_PBS                                                1.471   0.1412  
+## Condition:SeasonDay                                           -0.894   0.3714  
+## Condition:LocationUSA: Union Co, Bucknell Farm                -0.112   0.9106  
+## Condition:LocationUSA: Union Co, Bucknell Ropes Course         0.677   0.4985  
+## Condition:Treatment02_PBS                                     -0.988   0.3233  
+## SeasonDay:LocationUSA: Union Co, Bucknell Farm                 1.005   0.3150  
+## SeasonDay:LocationUSA: Union Co, Bucknell Ropes Course         2.067   0.0387 *
+## SeasonDay:Treatment02_PBS                                     -1.232   0.2179  
+## LocationUSA: Union Co, Bucknell Farm:Treatment02_PBS          -0.902   0.3673  
+## LocationUSA: Union Co, Bucknell Ropes Course:Treatment02_PBS   0.970   0.3322  
+## ---
+## Signif. codes:  0 &#39;***&#39; 0.001 &#39;**&#39; 0.01 &#39;*&#39; 0.05 &#39;.&#39; 0.1 &#39; &#39; 1
+## 
+##                                                                exp(coef)
+## Condition                                                      7.606e-91
+## SeasonDay                                                      1.152e+00
+## LocationUSA: Union Co, Bucknell Farm                           2.145e+00
+## LocationUSA: Union Co, Bucknell Ropes Course                   7.274e-02
+## Treatment02_PBS                                                6.484e+00
+## Condition:SeasonDay                                            2.953e-11
+## Condition:LocationUSA: Union Co, Bucknell Farm                 1.361e-30
+## Condition:LocationUSA: Union Co, Bucknell Ropes Course         1.547e+85
+## Condition:Treatment02_PBS                                     7.753e-123
+## SeasonDay:LocationUSA: Union Co, Bucknell Farm                 1.050e+00
+## SeasonDay:LocationUSA: Union Co, Bucknell Ropes Course         1.088e+00
+## SeasonDay:Treatment02_PBS                                      9.471e-01
+## LocationUSA: Union Co, Bucknell Farm:Treatment02_PBS           3.999e-01
+## LocationUSA: Union Co, Bucknell Ropes Course:Treatment02_PBS   1.485e+00
+##                                                               exp(-coef)
+## Condition                                                      1.315e+90
+## SeasonDay                                                      8.682e-01
+## LocationUSA: Union Co, Bucknell Farm                           4.662e-01
+## LocationUSA: Union Co, Bucknell Ropes Course                   1.375e+01
+## Treatment02_PBS                                                1.542e-01
+## Condition:SeasonDay                                            3.387e+10
+## Condition:LocationUSA: Union Co, Bucknell Farm                 7.347e+29
+## Condition:LocationUSA: Union Co, Bucknell Ropes Course         6.462e-86
+## Condition:Treatment02_PBS                                     1.290e+122
+## SeasonDay:LocationUSA: Union Co, Bucknell Farm                 9.520e-01
+## SeasonDay:LocationUSA: Union Co, Bucknell Ropes Course         9.195e-01
+## SeasonDay:Treatment02_PBS                                      1.056e+00
+## LocationUSA: Union Co, Bucknell Farm:Treatment02_PBS           2.501e+00
+## LocationUSA: Union Co, Bucknell Ropes Course:Treatment02_PBS   6.734e-01
+##                                                                lower .95
+## Condition                                                      0.000e+00
+## SeasonDay                                                      9.499e-01
+## LocationUSA: Union Co, Bucknell Farm                           1.254e-02
+## LocationUSA: Union Co, Bucknell Ropes Course                   6.195e-03
+## Treatment02_PBS                                                5.375e-01
+## Condition:SeasonDay                                            2.406e-34
+## Condition:LocationUSA: Union Co, Bucknell Farm                 0.000e+00
+## Condition:LocationUSA: Union Co, Bucknell Ropes Course        3.293e-162
+## Condition:Treatment02_PBS                                      0.000e+00
+## SeasonDay:LocationUSA: Union Co, Bucknell Farm                 9.543e-01
+## SeasonDay:LocationUSA: Union Co, Bucknell Ropes Course         1.004e+00
+## SeasonDay:Treatment02_PBS                                      8.686e-01
+## LocationUSA: Union Co, Bucknell Farm:Treatment02_PBS           5.453e-02
+## LocationUSA: Union Co, Bucknell Ropes Course:Treatment02_PBS   6.678e-01
+##                                                                upper .95
+## Condition                                                     5.717e+273
+## SeasonDay                                                      1.397e+00
+## LocationUSA: Union Co, Bucknell Farm                           3.669e+02
+## LocationUSA: Union Co, Bucknell Ropes Course                   8.540e-01
+## Treatment02_PBS                                                7.821e+01
+## Condition:SeasonDay                                            3.624e+12
+## Condition:LocationUSA: Union Co, Bucknell Farm                       Inf
+## Condition:LocationUSA: Union Co, Bucknell Ropes Course               Inf
+## Condition:Treatment02_PBS                                     1.532e+120
+## SeasonDay:LocationUSA: Union Co, Bucknell Farm                 1.156e+00
+## SeasonDay:LocationUSA: Union Co, Bucknell Ropes Course         1.178e+00
+## SeasonDay:Treatment02_PBS                                      1.033e+00
+## LocationUSA: Union Co, Bucknell Farm:Treatment02_PBS           2.933e+00
+## LocationUSA: Union Co, Bucknell Ropes Course:Treatment02_PBS   3.302e+00
+## 
+## Concordance= 0.697  (se = 0.023 )
+## Likelihood ratio test= 62.18  on 14 df,   p=5e-08
+## Wald test            = 60.38  on 14 df,   p=1e-07
+## Score (logrank) test = 64.28  on 14 df,   p=2e-08</code></pre>
+<ul>
+<li>ANOVA - <strong>multivariable</strong> analysis</li>
+</ul>
+<pre class="r"><code>#anova
+t &lt;- anova(modelA)
+
+#set some formatting before using cable (num digits to display, bolding based on significance)
+t[,4] = round(t[,4], digits = 10)
+row.names(t) = cell_spec(row.names(t), bold = ifelse(t[,4] &lt; 0.05, &quot;TRUE&quot;, &quot;FALSE&quot;))
+t[,4] = cell_spec(t[,4], bold = ifelse(t[,4] &lt; 0.05, &quot;TRUE&quot;, &quot;FALSE&quot;))
+
+#make nice table with kable
+kbl(t, escape = FALSE, digits = c(2, 2, 2, 3)) %&gt;%
+  kable_classic(full_width = F, html_font = &quot;Cambria&quot;, position = &quot;center&quot;)</code></pre>
+<table class=" lightable-classic" style="font-family: Cambria; width: auto !important; margin-left: auto; margin-right: auto;">
+<thead>
+<tr>
+<th style="text-align:left;">
+</th>
+<th style="text-align:right;">
+loglik
+</th>
+<th style="text-align:right;">
+Chisq
+</th>
+<th style="text-align:right;">
+Df
+</th>
+<th style="text-align:left;">
+Pr(&gt;|Chi|)
+</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td style="text-align:left;">
+<span style=" NA    ">NULL</span>
+</td>
+<td style="text-align:right;">
+-771.33
+</td>
+<td style="text-align:right;">
+NA
+</td>
+<td style="text-align:right;">
+NA
+</td>
+<td style="text-align:left;">
+<span style=" NA    ">NA</span>
+</td>
+</tr>
+<tr>
+<td style="text-align:left;">
+<span style=" font-weight: bold;    ">Condition</span>
+</td>
+<td style="text-align:right;">
+-753.77
+</td>
+<td style="text-align:right;">
+35.12
+</td>
+<td style="text-align:right;">
+1
+</td>
+<td style="text-align:left;">
+<span style=" font-weight: bold;    ">3.1e-09</span>
+</td>
+</tr>
+<tr>
+<td style="text-align:left;">
+<span style=" font-weight: bold;    ">SeasonDay</span>
+</td>
+<td style="text-align:right;">
+-748.44
+</td>
+<td style="text-align:right;">
+10.66
+</td>
+<td style="text-align:right;">
+1
+</td>
+<td style="text-align:left;">
+<span style=" font-weight: bold;    ">0.0010965548</span>
+</td>
+</tr>
+<tr>
+<td style="text-align:left;">
+<span style="     ">Location</span>
+</td>
+<td style="text-align:right;">
+-747.23
+</td>
+<td style="text-align:right;">
+2.41
+</td>
+<td style="text-align:right;">
+2
+</td>
+<td style="text-align:left;">
+<span style="     ">0.2994555758</span>
+</td>
+</tr>
+<tr>
+<td style="text-align:left;">
+<span style="     ">Treatment</span>
+</td>
+<td style="text-align:right;">
+-746.50
+</td>
+<td style="text-align:right;">
+1.48
+</td>
+<td style="text-align:right;">
+1
+</td>
+<td style="text-align:left;">
+<span style="     ">0.2244576484</span>
+</td>
+</tr>
+<tr>
+<td style="text-align:left;">
+<span style="     ">Condition:SeasonDay</span>
+</td>
+<td style="text-align:right;">
+-744.74
+</td>
+<td style="text-align:right;">
+3.51
+</td>
+<td style="text-align:right;">
+1
+</td>
+<td style="text-align:left;">
+<span style="     ">0.0611553228</span>
+</td>
+</tr>
+<tr>
+<td style="text-align:left;">
+<span style="     ">Condition:Location</span>
+</td>
+<td style="text-align:right;">
+-743.76
+</td>
+<td style="text-align:right;">
+1.96
+</td>
+<td style="text-align:right;">
+2
+</td>
+<td style="text-align:left;">
+<span style="     ">0.3754065111</span>
+</td>
+</tr>
+<tr>
+<td style="text-align:left;">
+<span style="     ">Condition:Treatment</span>
+</td>
+<td style="text-align:right;">
+-743.42
+</td>
+<td style="text-align:right;">
+0.69
+</td>
+<td style="text-align:right;">
+1
+</td>
+<td style="text-align:left;">
+<span style="     ">0.4053951631</span>
+</td>
+</tr>
+<tr>
+<td style="text-align:left;">
+<span style="     ">SeasonDay:Location</span>
+</td>
+<td style="text-align:right;">
+-741.51
+</td>
+<td style="text-align:right;">
+3.82
+</td>
+<td style="text-align:right;">
+2
+</td>
+<td style="text-align:left;">
+<span style="     ">0.1477615034</span>
+</td>
+</tr>
+<tr>
+<td style="text-align:left;">
+<span style="     ">SeasonDay:Treatment</span>
+</td>
+<td style="text-align:right;">
+-741.18
+</td>
+<td style="text-align:right;">
+0.64
+</td>
+<td style="text-align:right;">
+1
+</td>
+<td style="text-align:left;">
+<span style="     ">0.4223742168</span>
+</td>
+</tr>
+<tr>
+<td style="text-align:left;">
+<span style="     ">Location:Treatment</span>
+</td>
+<td style="text-align:right;">
+-740.24
+</td>
+<td style="text-align:right;">
+1.89
+</td>
+<td style="text-align:right;">
+2
+</td>
+<td style="text-align:left;">
+<span style="     ">0.3892935169</span>
+</td>
+</tr>
+</tbody>
+</table>
+<ul>
+<li>Checking model assumptions (beta coef = flat) - multivariable</li>
+</ul>
+<pre class="r"><code>#Check to see how the model looks - does it fulfill assumptions
+fitA&lt;-cox.zph(modelA, transform=&quot;km&quot;, global=TRUE)
+print(fitA)</code></pre>
+<pre><code>##                        chisq df     p
+## Condition           1.23e-04  1 0.991
+## SeasonDay           5.99e-01  1 0.439
+## Location            9.10e-01  2 0.634
+## Treatment           5.35e+00  1 0.021
+## Condition:SeasonDay 2.35e-01  1 0.628
+## Condition:Location  1.50e+00  2 0.473
+## Condition:Treatment 4.07e+00  1 0.044
+## SeasonDay:Location  2.56e-01  2 0.880
+## SeasonDay:Treatment 3.62e+00  1 0.057
+## Location:Treatment  3.42e+00  2 0.181
+## GLOBAL              1.96e+01 14 0.143</code></pre>
+<pre class="r"><code>plot(fitA)</code></pre>
+<p><img src="S3.Uninfected_Analysis_8_31_2022_files/figure-html/Does%20Condition%20Impact%20Survival%20Of%20Uninfected%20-%20assumptions-1.png" width="672" /><img src="S3.Uninfected_Analysis_8_31_2022_files/figure-html/Does%20Condition%20Impact%20Survival%20Of%20Uninfected%20-%20assumptions-2.png" width="672" /><img src="S3.Uninfected_Analysis_8_31_2022_files/figure-html/Does%20Condition%20Impact%20Survival%20Of%20Uninfected%20-%20assumptions-3.png" width="672" /><img src="S3.Uninfected_Analysis_8_31_2022_files/figure-html/Does%20Condition%20Impact%20Survival%20Of%20Uninfected%20-%20assumptions-4.png" width="672" /><img src="S3.Uninfected_Analysis_8_31_2022_files/figure-html/Does%20Condition%20Impact%20Survival%20Of%20Uninfected%20-%20assumptions-5.png" width="672" /><img src="S3.Uninfected_Analysis_8_31_2022_files/figure-html/Does%20Condition%20Impact%20Survival%20Of%20Uninfected%20-%20assumptions-6.png" width="672" /><img src="S3.Uninfected_Analysis_8_31_2022_files/figure-html/Does%20Condition%20Impact%20Survival%20Of%20Uninfected%20-%20assumptions-7.png" width="672" /><img src="S3.Uninfected_Analysis_8_31_2022_files/figure-html/Does%20Condition%20Impact%20Survival%20Of%20Uninfected%20-%20assumptions-8.png" width="672" /><img src="S3.Uninfected_Analysis_8_31_2022_files/figure-html/Does%20Condition%20Impact%20Survival%20Of%20Uninfected%20-%20assumptions-9.png" width="672" /><img src="S3.Uninfected_Analysis_8_31_2022_files/figure-html/Does%20Condition%20Impact%20Survival%20Of%20Uninfected%20-%20assumptions-10.png" width="672" /></p>
+<div id="reduced-multivariable-analysis" class="section level6">
+<h6>Reduced multivariable analysis</h6>
+<ul>
+<li>Model reduction to allow calculation of more useful Hazard
+Ratios</li>
+</ul>
+<p><em>Note: stepwise reduction not shown for space, only the tests for
+the final reduced model are shown below</em></p>
+<pre class="r"><code>#step-wise removal of non-significant terms, ended up removing all interaction terms and Location
+modelA_redux &lt;- coxph(Surv(Days_post_infection,Status)~ Condition + SeasonDay, data=Adult_Uninfected)
+summary(modelA_redux)</code></pre>
+<pre><code>## Call:
+## coxph(formula = Surv(Days_post_infection, Status) ~ Condition + 
+##     SeasonDay, data = Adult_Uninfected)
+## 
+##   n= 223, number of events= 182 
+## 
+##                  coef   exp(coef)    se(coef)      z Pr(&gt;|z|)    
+## Condition  -6.568e+02  5.630e-286   1.203e+02 -5.461 4.74e-08 ***
+## SeasonDay   4.683e-02   1.048e+00   1.424e-02  3.289  0.00101 ** 
+## ---
+## Signif. codes:  0 &#39;***&#39; 0.001 &#39;**&#39; 0.01 &#39;*&#39; 0.05 &#39;.&#39; 0.1 &#39; &#39; 1
+## 
+##            exp(coef) exp(-coef) lower .95  upper .95
+## Condition 5.630e-286 1.776e+285     0.000 1.360e-183
+## SeasonDay  1.048e+00  9.542e-01     1.019  1.078e+00
+## 
+## Concordance= 0.672  (se = 0.024 )
+## Likelihood ratio test= 45.78  on 2 df,   p=1e-10
+## Wald test            = 41.59  on 2 df,   p=9e-10
+## Score (logrank) test = 42.38  on 2 df,   p=6e-10</code></pre>
+<pre class="r"><code>anova(modelA_redux)</code></pre>
+<pre><code>## Analysis of Deviance Table
+##  Cox model: response is Surv(Days_post_infection, Status)
+## Terms added sequentially (first to last)
+## 
+##            loglik  Chisq Df Pr(&gt;|Chi|)    
+## NULL      -771.33                         
+## Condition -753.77 35.120  1    3.1e-09 ***
+## SeasonDay -748.44 10.657  1   0.001097 ** 
+## ---
+## Signif. codes:  0 &#39;***&#39; 0.001 &#39;**&#39; 0.01 &#39;*&#39; 0.05 &#39;.&#39; 0.1 &#39; &#39; 1</code></pre>
+<ul>
+<li>ANOVA - Reduced <strong>multivariable</strong> analysis</li>
+</ul>
+<pre class="r"><code>#anova
+t &lt;- anova(modelA_redux)
+
+#set some formatting before using cable (num digits to display, bolding based on significance)
+t[,4] = round(t[,4], digits = 10)
+row.names(t) = cell_spec(row.names(t), bold = ifelse(t[,4] &lt; 0.05, &quot;TRUE&quot;, &quot;FALSE&quot;))
+t[,4] = cell_spec(t[,4], bold = ifelse(t[,4] &lt; 0.05, &quot;TRUE&quot;, &quot;FALSE&quot;))
+
+#make nice table with kable
+kbl(t, escape = FALSE, digits = c(2, 2, 2, 3)) %&gt;%
+  kable_classic(full_width = F, html_font = &quot;Cambria&quot;, position = &quot;center&quot;)</code></pre>
+<table class=" lightable-classic" style="font-family: Cambria; width: auto !important; margin-left: auto; margin-right: auto;">
+<thead>
+<tr>
+<th style="text-align:left;">
+</th>
+<th style="text-align:right;">
+loglik
+</th>
+<th style="text-align:right;">
+Chisq
+</th>
+<th style="text-align:right;">
+Df
+</th>
+<th style="text-align:left;">
+Pr(&gt;|Chi|)
+</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td style="text-align:left;">
+<span style=" NA    ">NULL</span>
+</td>
+<td style="text-align:right;">
+-771.33
+</td>
+<td style="text-align:right;">
+NA
+</td>
+<td style="text-align:right;">
+NA
+</td>
+<td style="text-align:left;">
+<span style=" NA    ">NA</span>
+</td>
+</tr>
+<tr>
+<td style="text-align:left;">
+<span style=" font-weight: bold;    ">Condition</span>
+</td>
+<td style="text-align:right;">
+-753.77
+</td>
+<td style="text-align:right;">
+35.12
+</td>
+<td style="text-align:right;">
+1
+</td>
+<td style="text-align:left;">
+<span style=" font-weight: bold;    ">3.1e-09</span>
+</td>
+</tr>
+<tr>
+<td style="text-align:left;">
+<span style=" font-weight: bold;    ">SeasonDay</span>
+</td>
+<td style="text-align:right;">
+-748.44
+</td>
+<td style="text-align:right;">
+10.66
+</td>
+<td style="text-align:right;">
+1
+</td>
+<td style="text-align:left;">
+<span style=" font-weight: bold;    ">0.0010965548</span>
+</td>
+</tr>
+</tbody>
+</table>
+<ul>
+<li>Checking model assumptions (beta coef = flat) - reduced
+<strong>multivariable</strong></li>
+</ul>
+<pre class="r"><code>#Check to see how the model looks - does it fulfill assumptions
+fitA_redux&lt;-cox.zph(modelA_redux, transform=&quot;km&quot;, global=TRUE)
+print(fitA_redux)</code></pre>
+<pre><code>##            chisq df     p
+## Condition 0.0162  1 0.899
+## SeasonDay 5.1164  1 0.024
+## GLOBAL    5.1182  2 0.077</code></pre>
+<pre class="r"><code>plot(fitA_redux)</code></pre>
+<p><img src="S3.Uninfected_Analysis_8_31_2022_files/figure-html/Do%20Condition%20and%20Season%20Day%20Impact%20Survival%20Of%20Serratia%20-%20assumptions%20(redux)-1.png" width="672" /><img src="S3.Uninfected_Analysis_8_31_2022_files/figure-html/Do%20Condition%20and%20Season%20Day%20Impact%20Survival%20Of%20Serratia%20-%20assumptions%20(redux)-2.png" width="672" /></p>
+<ul>
+<li>Comparison of reduced model to full model</li>
+</ul>
+<pre class="r"><code>anova(modelA, modelA_redux) #does streamlining model significantly weaken model? No.</code></pre>
+<pre><code>## Analysis of Deviance Table
+##  Cox model: response is  Surv(Days_post_infection, Status)
+##  Model 1: ~ Condition + SeasonDay + Location + Treatment + Condition:SeasonDay + Condition:Location + Condition:Treatment + SeasonDay:Location + SeasonDay:Treatment + Location:Treatment
+##  Model 2: ~ Condition + SeasonDay
+##    loglik Chisq Df Pr(&gt;|Chi|)
+## 1 -740.24                    
+## 2 -748.44  16.4 12     0.1736</code></pre>
+<ul>
+<li>CONCLUSION
+<ul>
+<li>Reducing the model does not weaken the fit</li>
+</ul></li>
+</ul>
+</div>
+</div>
+</div>
+</div>
+</div>
+<div id="plots" class="section level2">
+<h2>Plots</h2>
+<pre class="r"><code>legend_size &lt;- 1.3</code></pre>
+<div id="condition" class="section level3">
+<h3><strong>Condition</strong></h3>
+<pre class="r"><code>Adult_Uninfected$Conditionquantile&lt;-split_quantile(x = Adult_Uninfected$Condition, type = 4)</code></pre>
+<ul>
+<li>Sample size:
+<table class=" lightable-classic" style="font-family: Cambria; width: auto !important; margin-left: auto; margin-right: auto;">
+<thead>
+<tr>
+<th style="text-align:left;">
+Conditionquantile
+</th>
+<th style="text-align:right;">
+n
+</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td style="text-align:left;">
+1
+</td>
+<td style="text-align:right;">
+56
+</td>
+</tr>
+<tr>
+<td style="text-align:left;">
+2
+</td>
+<td style="text-align:right;">
+56
+</td>
+</tr>
+<tr>
+<td style="text-align:left;">
+3
+</td>
+<td style="text-align:right;">
+55
+</td>
+</tr>
+<tr>
+<td style="text-align:left;">
+4
+</td>
+<td style="text-align:right;">
+56
+</td>
+</tr>
+</tbody>
+</table></li>
+<li>Plot</li>
+</ul>
+<pre class="r"><code>#png(file=&quot;Survival_Conditionquantile.png&quot;,width=2972,height=1960,units = &quot;px&quot;, res=400)
+par(mar=c(6,6,1,1)) #sets the margins around the graph so there is room for the labels
+plot(survfit(Surv(Days_post_infection,Status)~Conditionquantile, data=Adult_Uninfected),
+     col=c(&quot;#B7D7D4&quot;, &quot;#86BCB6&quot;, &quot;#499894&quot;,&quot;#306462&quot;),
+     lty=c(3, 2, 5, 1),
+     lwd=5, #line width
+     yaxt=&#39;n&#39;,
+     xaxt=&#39;n&#39;,
+     ylab=&quot;Proportion alive&quot;, #label for the y-axis
+     xlab=&quot;Days post-treatment&quot;, #label for the x-axis
+     cex.lab=2.5, #font size ofange of the x-axis
+     xaxs=&#39;i&#39;,
+     xlim=c(0,20)) #makes the data flush with the axis
+axis(2, #left side
+     las=3, #perpendicular to the axis
+     cex.axis=2, #font size
+     lwd=5) #line width
+axis(1, #bottom of the graph
+     cex.axis=2, #font size
+     lwd=5) #line width
+box(lwd=5)
+
+legend(&quot;topright&quot;, bty=&quot;n&quot; , c(&quot;Condition Q1 (n=56)&quot;,&quot;Condition Q2 (n=56)&quot;,&quot;Condition Q3 (n=55)&quot;,&quot;Condition Q4 (n=56)&quot;),col=c(&quot;#B7D7D4&quot;, &quot;#86BCB6&quot;, &quot;#499894&quot;,&quot;#306462&quot;), lty=c(3, 2, 5, 1),lwd=5, cex=legend_size)</code></pre>
+<p><img src="S3.Uninfected_Analysis_8_31_2022_files/figure-html/log(Condition)%20graph-1.png" width="672" /></p>
+<pre class="r"><code>#dev.off()</code></pre>
+</div>
+<div id="seasonday" class="section level3">
+<h3><strong>SeasonDay</strong></h3>
+<ul>
+<li>Sorted into two groups - early (collections on July 9, 13, 15, 17 -
+Season Days 1-18), late (collections on July 22, 23, 30, 31, 36 - Season
+Days 19-36)</li>
+<li>Couldn’t do three groups because last two collections were truncated
+due to RNA collection.</li>
+</ul>
+<pre class="r"><code>Adult_Uninfected$SDcategory&lt;- cut(Adult_Uninfected$SeasonDay, breaks = c(5, 18, Inf))</code></pre>
+<ul>
+<li>Sample size:
+<table class=" lightable-classic" style="font-family: Cambria; width: auto !important; margin-left: auto; margin-right: auto;">
+<thead>
+<tr>
+<th style="text-align:left;">
+SDcategory
+</th>
+<th style="text-align:right;">
+n
+</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td style="text-align:left;">
+(5,18]
+</td>
+<td style="text-align:right;">
+118
+</td>
+</tr>
+<tr>
+<td style="text-align:left;">
+(18,Inf]
+</td>
+<td style="text-align:right;">
+105
+</td>
+</tr>
+</tbody>
+</table></li>
+<li>Plot</li>
+</ul>
+<pre class="r"><code>#png(file=&quot;Survival_SD.png&quot;,width=2972,height=1960,units = &quot;px&quot;, res=400)
+par(mar=c(6,6,1,1)) #sets the margins around the graph so there is room for the labels
+plot(survfit(Surv(Days_post_infection,Status)~SDcategory, data=Adult_Uninfected),
+     col=c(&quot;#306462&quot;,&quot;#86BCB6&quot;),
+     lty=c(1, 3),
+     lwd=5, #line width
+     yaxt=&#39;n&#39;,
+     xaxt=&#39;n&#39;,
+     ylab=&quot;Proportion alive&quot;, #label for the y-axis
+     xlab=&quot;Days post-treatment&quot;, #label for the x-axis
+     cex.lab=2.5, #font size ofange of the x-axis
+     xaxs=&#39;i&#39;,
+     xlim=c(0,20)) #makes the data flush with the axis
+axis(2, #left side
+     las=3, #perpendicular to the axis
+     cex.axis=2, #font size
+     lwd=5) #line width
+axis(1, #bottom of the graph
+     cex.axis=2, #font size
+     lwd=5) #line width
+box(lwd=5)
+
+legend(&quot;topright&quot;, bty=&quot;n&quot; , c(&quot;Early (n=118)&quot;,&quot;Late (n=105)&quot;),col=c( &quot;#306462&quot;,&quot;#86BCB6&quot;), lty=c( 1,  3),lwd=5, cex=legend_size)</code></pre>
+<p><img src="S3.Uninfected_Analysis_8_31_2022_files/figure-html/SD%20graphs-1.png" width="672" /></p>
+<pre class="r"><code>#dev.off()</code></pre>
+</div>
+<div id="location" class="section level3">
+<h3><strong>Location</strong></h3>
+<ul>
+<li><p>There are very few fireflies from the Bucknell University Farm
+that are uninfected (n=14). This likely limits our ability to detect
+location effects, although our stats could still detect differences
+between other locations which are well represented.</p></li>
+<li><p>Sample size:</p>
+<table class=" lightable-classic" style="font-family: Cambria; width: auto !important; margin-left: auto; margin-right: auto;">
+<thead>
+<tr>
+<th style="text-align:left;">
+<p>Location</p>
+</th>
+<th style="text-align:right;">
+<p>n</p>
+</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td style="text-align:left;">
+<p>USA: Montour Co, Bucknell Natural Area</p>
+</td>
+<td style="text-align:right;">
+<p>101</p>
+</td>
+</tr>
+<tr>
+<td style="text-align:left;">
+<p>USA: Union Co, Bucknell Farm</p>
+</td>
+<td style="text-align:right;">
+<p>14</p>
+</td>
+</tr>
+<tr>
+<td style="text-align:left;">
+<p>USA: Union Co, Bucknell Ropes Course</p>
+</td>
+<td style="text-align:right;">
+<p>108</p>
+</td>
+</tr>
+</tbody>
+</table></li>
+<li><p>Plot</p></li>
+</ul>
+<pre class="r"><code>#png(file=&quot;Survival_Location.png&quot;,width=2972,height=1960,units = &quot;px&quot;, res=400)
+par(mar=c(6,6,1,1)) #sets the margins around the graph so there is room for the labels
+plot(survfit(Surv(Days_post_infection,Status)~Location, data=Adult_Uninfected),
+     col=c(&quot;#4E79A7&quot;,&quot;#F28E2B&quot;,&quot;#E15759&quot;),
+     lty=c(1, 2,3),
+     lwd=5, #line width
+     yaxt=&#39;n&#39;,
+     xaxt=&#39;n&#39;,
+     ylab=&quot;Proportion alive&quot;, #label for the y-axis
+     xlab=&quot;Days post-treatment&quot;, #label for the x-axis
+     cex.lab=2.5, #font size ofange of the x-axis
+     xaxs=&#39;i&#39;,
+     xlim=c(0,20)) #makes the data flush with the axis
+axis(2, #left side
+     las=3, #perpendicular to the axis
+     cex.axis=2, #font size
+     lwd=5) #line width
+axis(1, #bottom of the graph
+     cex.axis=2, #font size
+     lwd=5) #line width
+box(lwd=5)
+
+legend(&quot;topright&quot;, bty=&quot;n&quot; , c(&quot;BNA (n=101)&quot;,&quot;BUF (n=14)&quot;, &quot;FDBCC (n=108)&quot;),col=c( &quot;#4E79A7&quot;,&quot;#F28E2B&quot;,&quot;#E15759&quot;), lty=c( 1,  2,3),lwd=5, cex=legend_size)</code></pre>
+<p><img src="S3.Uninfected_Analysis_8_31_2022_files/figure-html/Location%20graph-1.png" width="672" /></p>
+<pre class="r"><code>#dev.off()</code></pre>
+</div>
+<div id="treatment" class="section level3">
+<h3><strong>Treatment</strong></h3>
+<ul>
+<li>Sample size:
+<table class=" lightable-classic" style="font-family: Cambria; width: auto !important; margin-left: auto; margin-right: auto;">
+<thead>
+<tr>
+<th style="text-align:left;">
+Treatment
+</th>
+<th style="text-align:right;">
+n
+</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td style="text-align:left;">
+01_uninjected
+</td>
+<td style="text-align:right;">
+53
+</td>
+</tr>
+<tr>
+<td style="text-align:left;">
+02_PBS
+</td>
+<td style="text-align:right;">
+170
+</td>
+</tr>
+</tbody>
+</table></li>
+<li>Plot</li>
+</ul>
+<pre class="r"><code>#png(file=&quot;Survival_Treatment.png&quot;,width=2972,height=1960,units = &quot;px&quot;, res=400)
+par(mar=c(6,6,1,1)) #sets the margins around the graph so there is room for the labels
+plot(survfit(Surv(Days_post_infection,Status)~Treatment, data=Adult_Uninfected),
+     col=c(&quot;#306462&quot;,&quot;#86BCB6&quot;),
+     lty=c(1, 3),
+     lwd=5, #line width
+     yaxt=&#39;n&#39;,
+     xaxt=&#39;n&#39;,
+     ylab=&quot;Proportion alive&quot;, #label for the y-axis
+     xlab=&quot;Days post-treatment&quot;, #label for the x-axis
+     cex.lab=2.5, #font size of range of the x-axis
+     xaxs=&#39;i&#39;,
+     xlim=c(0,20)) #makes the data flush with the axis
+axis(2, #left side
+     las=3, #perpendicular to the axis
+     cex.axis=2, #font size
+     lwd=5) #line width
+axis(1, #bottom of the graph
+     cex.axis=2, #font size
+     lwd=5) #line width
+box(lwd=5)
+
+legend(&quot;topright&quot;, bty=&quot;n&quot; , c(&quot;Uninjected (n=53)&quot;,&quot;Sterile saline (n=170)&quot;),col=c( &quot;#306462&quot;,&quot;#86BCB6&quot;), lty=c( 1,  3),lwd=5, cex=legend_size)</code></pre>
+<p><img src="S3.Uninfected_Analysis_8_31_2022_files/figure-html/Treatment%20graphs-1.png" width="672" /></p>
+<pre class="r"><code>#dev.off()</code></pre>
+</div>
+<div id="multipanel-plots-for-main-text" class="section level3">
+<h3>Multipanel plots for main text</h3>
+<ul>
+<li>Note: gave up on trying to make this pretty in R -&gt; exported to
+pdf and modified in Adobe Illustrator.</li>
+</ul>
+<pre class="r"><code>#make big plot with table
+#read in kable table as image
+a &lt;- ggdraw() +
+  draw_image(&quot;Survival_Conditionquantile.png&quot;)
+
+b &lt;- ggdraw() +
+  draw_image(&quot;Survival_SD.png&quot;)
+
+#c &lt;- ggdraw() +
+#  draw_image(&quot;Survival_Location.png&quot;)
+
+#d &lt;- ggdraw() +
+#  draw_image(&quot;Survival_Treatment.png&quot;)
+
+#using patchwork
+#get the plots together
+
+multiplot &lt;- a + b
+w &lt;- multiplot + 
+  plot_annotation(tag_levels = &#39;A&#39;)
+#ggsave(&quot;Fig.2.Uninfected_analysis_row_unedited_6_8_22.pdf&quot;, w, device = &quot;pdf&quot;)
+
+w</code></pre>
+<p><img src="S3.Uninfected_Analysis_8_31_2022_files/figure-html/uninfected%20multipanel%20plot%20for%20maintext-1.png" width="672" /></p>
+</div>
+</div>
+<div
+id="calculating-hazard-rates-for-different-uninfected-firefly-classes"
+class="section level2">
+<h2>Calculating Hazard rates for different uninfected firefly
+classes</h2>
+<ul>
+<li>Extract the coefficients and define the function to compare hazard
+rates among two exemplar fireflies</li>
+</ul>
+<pre class="r"><code>condition_coef &lt;- modelA_redux$coefficients[1]
+seasonday_coef &lt;- modelA_redux$coefficients[2]
+
+calc_HR_uninfected &lt;- function(avg_cond1, SD1, avg_cond2, SD2){
+  
+  H_for_firefly1 = exp(condition_coef*avg_cond1 + seasonday_coef*SD1)
+  H_for_firefly2 = exp(condition_coef*avg_cond2 + seasonday_coef*SD2)
+  HR = H_for_firefly2/H_for_firefly1
+  names(HR) &lt;- NULL
+  return(HR)
+}</code></pre>
+<ul>
+<li>Hazard for fireflies in better (Q4) vs worse condition (Q1)</li>
+</ul>
+<pre class="r"><code>good_condition_ff &lt;- median(Adult_Uninfected$Condition[which(Adult_Uninfected$Conditionquantile == 4)])
+sad_condition_ff &lt;- median(Adult_Uninfected$Condition[which(Adult_Uninfected$Conditionquantile == 1)])
+
+
+calc_HR_uninfected(avg_cond1 = good_condition_ff, 
+                   SD1 = 20, 
+                   avg_cond2 = sad_condition_ff, 
+                   SD2 = 20)</code></pre>
+<pre><code>## [1] 2.561301</code></pre>
+<ul>
+<li>Hazard for fireflies comparing mid-early season captured fireflies
+(Day 10) to mid-late (Day 20)</li>
+</ul>
+<pre class="r"><code>#calc for PBS vs uninj, mortality in first week
+calc_HR_uninfected(avg_cond1 = 0.01, 
+                   SD1 = 10, 
+                   avg_cond2 = 0.01, 
+                   SD2 = 20)</code></pre>
+<pre><code>## [1] 1.597346</code></pre>
+<hr />
+</div>
+<div id="session-info" class="section level2">
+<h2>Session info</h2>
+<pre class="r"><code>sessionInfo()</code></pre>
+<pre><code>## R version 4.2.1 (2022-06-23)
+## Platform: x86_64-apple-darwin17.0 (64-bit)
+## Running under: macOS Catalina 10.15.7
+## 
+## Matrix products: default
+## BLAS:   /Library/Frameworks/R.framework/Versions/4.2/Resources/lib/libRblas.0.dylib
+## LAPACK: /Library/Frameworks/R.framework/Versions/4.2/Resources/lib/libRlapack.dylib
+## 
+## locale:
+## [1] en_US.UTF-8/en_US.UTF-8/en_US.UTF-8/C/en_US.UTF-8/en_US.UTF-8
+## 
+## attached base packages:
+## [1] grid      stats     graphics  grDevices utils     datasets  methods  
+## [8] base     
+## 
+## other attached packages:
+##  [1] survminer_0.4.9  patchwork_1.1.2  ggpubr_0.4.0     cowplot_1.1.1   
+##  [5] sjPlot_2.8.11    kableExtra_1.3.4 gridExtra_2.3    fabricatr_1.0.0 
+##  [9] ggthemes_4.2.4   qqplotr_0.0.5    Hmisc_4.7-1      Formula_1.2-4   
+## [13] survival_3.4-0   lattice_0.20-45  dplyr_1.0.10     tidyr_1.2.1     
+## [17] ggplot2_3.3.6   
+## 
+## loaded via a namespace (and not attached):
+##   [1] minqa_1.2.4         colorspace_2.0-3    ggsignif_0.6.3     
+##   [4] deldir_1.0-6        ellipsis_0.3.2      sjlabelled_1.2.0   
+##   [7] estimability_1.4.1  htmlTable_2.4.1     parameters_0.18.2  
+##  [10] base64enc_0.1-3     rstudioapi_0.14     farver_2.1.1       
+##  [13] fansi_1.0.3         mvtnorm_1.1-3       xml2_1.3.3         
+##  [16] splines_4.2.1       cachem_1.0.6        robustbase_0.95-0  
+##  [19] knitr_1.40          sjmisc_2.8.9        polynom_1.4-1      
+##  [22] jsonlite_1.8.0      nloptr_2.0.3        ggeffects_1.1.3    
+##  [25] km.ci_0.5-6         broom_1.0.1         cluster_2.1.4      
+##  [28] png_0.1-7           effectsize_0.7.0.5  compiler_4.2.1     
+##  [31] httr_1.4.4          sjstats_0.18.1      emmeans_1.8.1-1    
+##  [34] backports_1.4.1     assertthat_0.2.1    Matrix_1.5-1       
+##  [37] fastmap_1.1.0       cli_3.4.0           htmltools_0.5.3    
+##  [40] tools_4.2.1         gtable_0.3.1        glue_1.6.2         
+##  [43] Rcpp_1.0.9          carData_3.0-5       jquerylib_0.1.4    
+##  [46] vctrs_0.4.1         svglite_2.1.0       nlme_3.1-159       
+##  [49] insight_0.18.4      xfun_0.33           stringr_1.4.1      
+##  [52] ps_1.7.1            lme4_1.1-30         rvest_1.0.3        
+##  [55] lifecycle_1.0.2     rstatix_0.7.0       DEoptimR_1.0-11    
+##  [58] zoo_1.8-11          MASS_7.3-58.1       scales_1.2.1       
+##  [61] RColorBrewer_1.1-3  yaml_2.3.5          KMsurv_0.1-5       
+##  [64] sass_0.4.2          rpart_4.1.16        latticeExtra_0.6-30
+##  [67] stringi_1.7.8       highr_0.9           bayestestR_0.13.0  
+##  [70] checkmate_2.1.0     boot_1.3-28         rlang_1.0.5        
+##  [73] pkgconfig_2.0.3     systemfonts_1.0.4   evaluate_0.16      
+##  [76] purrr_0.3.4         htmlwidgets_1.5.4   labeling_0.4.2     
+##  [79] tidyselect_1.1.2    processx_3.7.0      magrittr_2.0.3     
+##  [82] R6_2.5.1            magick_2.7.3        generics_0.1.3     
+##  [85] DBI_1.1.3           mgcv_1.8-40         pillar_1.8.1       
+##  [88] foreign_0.8-82      withr_2.5.0         datawizard_0.6.0   
+##  [91] abind_1.4-5         nnet_7.3-17         tibble_3.1.8       
+##  [94] performance_0.9.2   modelr_0.1.9        car_3.1-0          
+##  [97] survMisc_0.5.6      interp_1.1-3        utf8_1.2.2         
+## [100] rmarkdown_2.16      jpeg_0.1-9          data.table_1.14.2  
+## [103] callr_3.7.2         digest_0.6.29       webshot_0.5.3      
+## [106] xtable_1.8-4        munsell_0.5.0       viridisLite_0.4.1  
+## [109] bslib_0.4.0</code></pre>
+</div>
+</div>
+
+
+
+</div>
+</div>
+
+</div>
+
+<script>
+
+// add bootstrap table styles to pandoc tables
+function bootstrapStylePandocTables() {
+  $('tr.odd').parent('tbody').parent('table').addClass('table table-condensed');
+}
+$(document).ready(function () {
+  bootstrapStylePandocTables();
+});
+
+
+</script>
+
+<!-- tabsets -->
+
+<script>
+$(document).ready(function () {
+  window.buildTabsets("TOC");
+});
+
+$(document).ready(function () {
+  $('.tabset-dropdown > .nav-tabs > li').click(function () {
+    $(this).parent().toggleClass('nav-tabs-open');
+  });
+});
+</script>
+
+<!-- code folding -->
+<script>
+$(document).ready(function () {
+  window.initializeCodeFolding("hide" === "show");
+});
+</script>
+
+<script>
+$(document).ready(function ()  {
+
+    // temporarily add toc-ignore selector to headers for the consistency with Pandoc
+    $('.unlisted.unnumbered').addClass('toc-ignore')
+
+    // move toc-ignore selectors from section div to header
+    $('div.section.toc-ignore')
+        .removeClass('toc-ignore')
+        .children('h1,h2,h3,h4,h5').addClass('toc-ignore');
+
+    // establish options
+    var options = {
+      selectors: "h1,h2,h3,h4,h5,h6",
+      theme: "bootstrap3",
+      context: '.toc-content',
+      hashGenerator: function (text) {
+        return text.replace(/[.\\/?&!#<>]/g, '').replace(/\s/g, '_');
+      },
+      ignoreSelector: ".toc-ignore",
+      scrollTo: 0
+    };
+    options.showAndHide = true;
+    options.smoothScroll = true;
+
+    // tocify
+    var toc = $("#TOC").tocify(options).data("toc-tocify");
+});
+</script>
+
+<!-- dynamically load mathjax for compatibility with self-contained -->
+<script>
+  (function () {
+    var script = document.createElement("script");
+    script.type = "text/javascript";
+    script.src  = "https://mathjax.rstudio.com/latest/MathJax.js?config=TeX-AMS-MML_HTMLorMML";
+    document.getElementsByTagName("head")[0].appendChild(script);
+  })();
+</script>
+
+</body>
+</html>
